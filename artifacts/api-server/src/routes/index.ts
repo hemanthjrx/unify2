@@ -1,0 +1,44 @@
+import { Router, type IRouter } from "express";
+import healthRouter from "./health";
+import authRouter from "./auth";
+import usersRouter from "./users";
+import interestsRouter from "./interests";
+import dashboardRouter from "./dashboard";
+import communitiesRouter from "./communities";
+import connectionsRouter from "./connections";
+import activityRouter from "./activity";
+import postsRouter from "./posts";
+import notificationsRouter from "./notifications";
+import searchRouter from "./search";
+import marketplaceRouter from "./marketplace";
+import freelanceRouter from "./freelance";
+import adminRouter from "./admin";
+import messagesRouter from "./messages";
+import hackathonsRouter from "./hackathons";
+import mentorshipRouter from "./mentorship";
+import announcementsRouter from "./announcements";
+import storageRouter from "./storage";
+
+const router: IRouter = Router();
+
+router.use(healthRouter);
+router.use(authRouter);
+router.use(usersRouter);
+router.use(interestsRouter);
+router.use(dashboardRouter);
+router.use(communitiesRouter);
+router.use(connectionsRouter);
+router.use(activityRouter);
+router.use(postsRouter);
+router.use(notificationsRouter);
+router.use(searchRouter);
+router.use(marketplaceRouter);
+router.use(freelanceRouter);
+router.use(adminRouter);
+router.use(messagesRouter);
+router.use(hackathonsRouter);
+router.use(mentorshipRouter);
+router.use(announcementsRouter);
+router.use(storageRouter);
+
+export default router;

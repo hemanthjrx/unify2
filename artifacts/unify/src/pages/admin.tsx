@@ -1,0 +1,1950 @@
+import { useState, useRef } from "react";
+import { useGetMyProfile } from "@workspace/api-client-react";
+import { useAuthenticatedFetch } from "@/lib/api-fetch";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import {
+  Shield,
+  Users,
+  ShoppingBag,
+  Briefcase,
+  PlusCircle,
+  Trash2,
+  Ban,
+  CheckCircle,
+  ChevronLeft,
+  X,
+  Pencil,
+  Mail,
+  Phone,
+  Hash,
+  Calendar,
+  Activity,
+  Crown,
+  Clock,
+  UserMinus,
+  FileText,
+  Flag,
+  Search,
+  ExternalLink,
+  AlertTriangle,
+  UserCheck,
+  ShieldCheck,
+  ImageIcon,
+  Upload,
+  Eye,
+  EyeOff,
+} from "lucide-react";
+
+const BASE = import.meta.env.BASE_URL.replace(/\/$/, "");
+
+type AdminUser = {
+  id: number;
+  username: string | null;
+  email: string | null;
+  mobileNumber: string | null;
+  usn: string | null;
+  role: string;
+  isBanned: boolean;
+  avatarColor: string;
+  coins: number;
+  onboardingComplete: boolean;
+  createdAt: string;
+};
+
+type AdminUserDetail = AdminUser & {
+  bio: string | null;
+  skills: string[];
+  weeklyPoints: number;
+  communityCount: number;
+  bannerColor: string;
+  activities: {
+    id: number;
+    kind: string;
+    message: string;
+    targetName: string | null;
+    createdAt: string;
+  }[];
+};
+
+type Community = {
+  id: number;
+  slug: string;
+  name: string;
+  description: string;
+  accentColor: string;
+  icon: string;
+  tags: string[];
+  memberCount?: number;
+  isMember?: boolean;
+  createdAt?: string;
+  bannerImageUrl?: string | null;
+  profileImageUrl?: string | null;
+  leaderId?: number | null;
+  leaderUsername?: string | null;
+};
+
+type Moderator = {
+  id: number;
+  username: string | null;
+  name: string | null;
+  email: string | null;
+  createdAt: string;
+  isBanned: boolean;
+};
+
+type CommunityMember = {
+  id: number;
+  username: string;
+  avatarColor: string | null;
+  joinedAt: string;
+};
+
+type MarketplaceItem = {
+  id: number;
+  title: string;
+  description: string;
+  price: number;
+  category: string;
+  contactInfo: string | null;
+  createdAt: string;
+  sellerId: number;
+  sellerUsername: string | null;
+};
+
+type FreelanceItem = {
+  id: number;
+  title: string;
+  category: string;
+  price: number;
+  createdAt: string;
+  providerId: number;
+  providerUsername: string | null;
+};
+
+type Tab = "users" | "communities" | "marketplace" | "freelance" | "applications" | "reports" | "moderators";
+
+type Application = {
+  id: number;
+  name: string | null;
+  username: string | null;
+  usn: string | null;
+  email: string | null;
+  mobileNumber: string | null;
+  branch: string | null;
+  semester: string | null;
+  avatarColor: string;
+  accountStatus: string;
+  idCardUrl: string | null;
+  feeReceiptUrl: string | null;
+  reviewedAt: string | null;
+  rejectionReason: string | null;
+  createdAt: string;
+  reviewerUsername: string | null;
+  reviewerRole: string | null;
+};
+
+type Report = {
+  id: number;
+  targetType: string;
+  targetId: number | null;
+  targetUsn: string | null;
+  description: string;
+  status: string;
+  reviewNote: string | null;
+  reviewedAt: string | null;
+  createdAt: string;
+  reporterUsername: string | null;
+};
+
+const BAN_OPTIONS = [
+  { value: "3d",        label: "3 Days" },
+  { value: "1w",        label: "1 Week" },
+  { value: "1m",        label: "1 Month" },
+  { value: "3m",        label: "3 Months" },
+  { value: "manual",    label: "Until Manually Unbanned" },
+  { value: "permanent", label: "Permanently" },
+];
+
+function BanDurationModal({
+  username,
+  onConfirm,
+  onCancel,
+}: {
+  username: string;
+  onConfirm: (duration: string) => void;
+  onCancel: () => void;
+}) {
+  const [selected, setSelected] = useState("manual");
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+      <div className="bg-card border border-card-border rounded-xl shadow-2xl w-full max-w-sm p-6 space-y-4">
+        <div className="flex items-start justify-between gap-2">
+          <div>
+            <div className="font-bold text-base flex items-center gap-2">
+              <Ban className="w-4 h-4 text-destructive" /> Ban @{username}
+            </div>
+            <div className="text-xs text-muted-foreground mt-0.5">Select how long to ban this student</div>
+          </div>
+          <button onClick={onCancel}><X className="w-4 h-4 text-muted-foreground" /></button>
+        </div>
+        <div className="grid grid-cols-2 gap-2">
+          {BAN_OPTIONS.map((opt) => (
+            <button
+              key={opt.value}
+              onClick={() => setSelected(opt.value)}
+              className={`flex items-center gap-2 px-3 py-2.5 rounded-lg border text-sm font-medium transition-colors ${
+                selected === opt.value
+                  ? "border-destructive bg-destructive/10 text-destructive"
+                  : "border-border text-muted-foreground hover:border-border hover:text-foreground"
+              }`}
+            >
+              <Clock className="w-3.5 h-3.5 flex-shrink-0" />
+              {opt.label}
+            </button>
+          ))}
+        </div>
+        <div className="flex gap-2 pt-1">
+          <Button variant="ghost" size="sm" className="flex-1" onClick={onCancel}>
+            Cancel
+          </Button>
+          <Button variant="destructive" size="sm" className="flex-1" onClick={() => onConfirm(selected)}>
+            Ban Student
+          </Button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function useAdminFetch() {
+  const authFetch = useAuthenticatedFetch();
+  return {
+    get: async (path: string) => {
+      const res = await authFetch(`${BASE}/api${path}`);
+      if (!res.ok) throw new Error(`${res.status}`);
+      return res.json();
+    },
+    post: async (path: string, body: unknown) => {
+      const res = await authFetch(`${BASE}/api${path}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+      });
+      if (!res.ok) throw new Error(`${res.status}`);
+      return res.status === 204 ? null : res.json();
+    },
+    patch: async (path: string, body: unknown) => {
+      const res = await authFetch(`${BASE}/api${path}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+      });
+      if (!res.ok) throw new Error(`${res.status}`);
+      return res.json();
+    },
+    del: async (path: string) => {
+      const res = await authFetch(`${BASE}/api${path}`, { method: "DELETE" });
+      if (!res.ok && res.status !== 204) throw new Error(`${res.status}`);
+    },
+  };
+}
+
+export default function AdminPage() {
+  const { data: profile } = useGetMyProfile();
+  const isAdmin = profile?.role === "admin";
+  const isModerator = profile?.role === "moderator";
+  const hasAccess = isAdmin || isModerator;
+
+  const [tab, setTab] = useState<Tab>(isModerator ? "applications" : "users");
+  const [selectedUser, setSelectedUser] = useState<AdminUserDetail | null>(null);
+
+  if (!profile) return <div className="p-8 text-muted-foreground">Loading…</div>;
+  if (!hasAccess) {
+    return (
+      <div className="flex flex-col items-center justify-center h-full gap-4 text-center p-12">
+        <Shield className="w-12 h-12 text-muted-foreground" />
+        <div>
+          <div className="text-lg font-semibold">Access Denied</div>
+          <div className="text-sm text-muted-foreground">You need admin or moderator privileges to view this page.</div>
+        </div>
+      </div>
+    );
+  }
+
+  if (selectedUser) {
+    return <UserDetailView user={selectedUser} onBack={() => setSelectedUser(null)} />;
+  }
+
+  const allTabs = [
+    { id: "applications" as const, label: "Applications", icon: UserCheck },
+    { id: "reports" as const, label: "Reports", icon: Flag },
+    { id: "users" as const, label: "Students", icon: Users, adminOnly: true },
+    { id: "communities" as const, label: "Communities", icon: Crown, adminOnly: true },
+    { id: "marketplace" as const, label: "Marketplace", icon: ShoppingBag, adminOnly: true },
+    { id: "freelance" as const, label: "Freelance", icon: Briefcase, adminOnly: true },
+    { id: "moderators" as const, label: "Moderators", icon: ShieldCheck, adminOnly: true },
+  ];
+
+  const visibleTabs = allTabs.filter((t) => !t.adminOnly || isAdmin);
+
+  return (
+    <div className="p-8 max-w-6xl mx-auto space-y-6">
+      <div className="flex items-center gap-3">
+        <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-red-500 to-orange-500 flex items-center justify-center">
+          <Shield className="w-5 h-5 text-white" />
+        </div>
+        <div>
+          <h1 className="text-2xl font-bold">{isAdmin ? "Admin" : "Moderator"} Panel</h1>
+          <p className="text-sm text-muted-foreground">Manage students, communities, and listings</p>
+        </div>
+      </div>
+
+      <div className="flex gap-2 border-b border-border pb-0 flex-wrap">
+        {visibleTabs.map(({ id, label, icon: Icon }) => (
+          <button
+            key={id}
+            onClick={() => setTab(id)}
+            className={`flex items-center gap-2 px-4 py-2.5 text-sm font-medium border-b-2 transition-colors ${
+              tab === id
+                ? "border-primary text-primary"
+                : "border-transparent text-muted-foreground hover:text-foreground"
+            }`}
+          >
+            <Icon className="w-4 h-4" />
+            {label}
+          </button>
+        ))}
+      </div>
+
+      {tab === "applications" && <ApplicationsTab isAdmin={isAdmin} />}
+      {tab === "reports" && <ReportsTab isAdmin={isAdmin} />}
+      {tab === "users" && isAdmin && <UsersTab onSelectUser={setSelectedUser} />}
+      {tab === "communities" && isAdmin && <CommunitiesTab />}
+      {tab === "marketplace" && isAdmin && <MarketplaceTab />}
+      {tab === "freelance" && isAdmin && <FreelanceTab />}
+      {tab === "moderators" && isAdmin && <ModeratorsTab />}
+    </div>
+  );
+}
+
+function UsersTab({ onSelectUser }: { onSelectUser: (u: AdminUserDetail) => void }) {
+  const api = useAdminFetch();
+  const qc = useQueryClient();
+  const { data: users = [], isLoading } = useQuery<AdminUser[]>({
+    queryKey: ["admin", "users"],
+    queryFn: () => api.get("/admin/users"),
+  });
+
+  const [banTarget, setBanTarget] = useState<AdminUser | null>(null);
+
+  const banMutation = useMutation({
+    mutationFn: ({ id, isBanned, banDuration }: { id: number; isBanned: boolean; banDuration?: string }) =>
+      api.patch(`/admin/users/${id}`, { isBanned, ...(banDuration ? { banDuration } : {}) }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["admin", "users"] });
+      setBanTarget(null);
+    },
+  });
+
+  const [search, setSearch] = useState("");
+  const filtered = users.filter(
+    (u) =>
+      !search ||
+      u.username?.toLowerCase().includes(search.toLowerCase()) ||
+      u.email?.toLowerCase().includes(search.toLowerCase()) ||
+      u.usn?.toLowerCase().includes(search.toLowerCase()),
+  );
+
+  async function openUser(id: number) {
+    const detail: AdminUserDetail = await api.get(`/admin/users/${id}`);
+    onSelectUser(detail);
+  }
+
+  if (isLoading) return <div className="text-muted-foreground text-sm">Loading students…</div>;
+
+  return (
+    <div className="space-y-4">
+      {banTarget && (
+        <BanDurationModal
+          username={banTarget.username ?? "unknown"}
+          onConfirm={(duration) => banMutation.mutate({ id: banTarget.id, isBanned: true, banDuration: duration })}
+          onCancel={() => setBanTarget(null)}
+        />
+      )}
+      <Input
+        placeholder="Search by username, email or USN…"
+        value={search}
+        onChange={(e) => setSearch(e.target.value)}
+        className="max-w-sm"
+      />
+      <div className="text-xs text-muted-foreground">{filtered.length} students</div>
+      <div className="rounded-xl border border-border overflow-hidden">
+        <table className="w-full text-sm">
+          <thead className="bg-secondary/60 border-b border-border">
+            <tr>
+              <th className="text-left px-4 py-3 font-medium text-muted-foreground">Student</th>
+              <th className="text-left px-4 py-3 font-medium text-muted-foreground">Email</th>
+              <th className="text-left px-4 py-3 font-medium text-muted-foreground">USN</th>
+              <th className="text-left px-4 py-3 font-medium text-muted-foreground">Mobile</th>
+              <th className="text-left px-4 py-3 font-medium text-muted-foreground">Role</th>
+              <th className="text-left px-4 py-3 font-medium text-muted-foreground">Status</th>
+              <th className="text-left px-4 py-3 font-medium text-muted-foreground">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {filtered.map((u, i) => (
+              <tr
+                key={u.id}
+                className={`border-t border-border hover:bg-secondary/30 transition-colors ${
+                  u.isBanned ? "opacity-60" : ""
+                } ${i % 2 === 0 ? "" : "bg-secondary/10"}`}
+              >
+                <td className="px-4 py-3">
+                  <button
+                    onClick={() => openUser(u.id)}
+                    className="flex items-center gap-2 hover:underline text-left"
+                  >
+                    <Avatar className="w-7 h-7">
+                      <AvatarFallback
+                        style={{ backgroundColor: u.avatarColor }}
+                        className="text-white text-xs font-bold"
+                      >
+                        {(u.username?.[0] || "?").toUpperCase()}
+                      </AvatarFallback>
+                    </Avatar>
+                    <span className="font-medium">@{u.username || "—"}</span>
+                    {u.isBanned && (
+                      <span className="px-1.5 py-0.5 rounded text-[10px] bg-red-500/20 text-red-400 font-semibold">
+                        BANNED
+                      </span>
+                    )}
+                  </button>
+                </td>
+                <td className="px-4 py-3 text-muted-foreground">{u.email || "—"}</td>
+                <td className="px-4 py-3 text-muted-foreground font-mono text-xs">{u.usn || "—"}</td>
+                <td className="px-4 py-3 text-muted-foreground">{u.mobileNumber || "—"}</td>
+                <td className="px-4 py-3">
+                  <span
+                    className={`px-2 py-0.5 rounded-full text-[11px] font-semibold ${
+                      u.role === "admin"
+                        ? "bg-violet-500/20 text-violet-400"
+                        : "bg-secondary text-muted-foreground"
+                    }`}
+                  >
+                    {u.role}
+                  </span>
+                </td>
+                <td className="px-4 py-3">
+                  <span
+                    className={`px-2 py-0.5 rounded-full text-[11px] font-semibold ${
+                      u.onboardingComplete
+                        ? "bg-emerald-500/20 text-emerald-400"
+                        : "bg-yellow-500/20 text-yellow-400"
+                    }`}
+                  >
+                    {u.onboardingComplete ? "Active" : "Onboarding"}
+                  </span>
+                </td>
+                <td className="px-4 py-3">
+                  <div className="flex items-center gap-2">
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      className="h-7 px-2 text-xs"
+                      onClick={() => openUser(u.id)}
+                    >
+                      View
+                    </Button>
+                    {u.isBanned ? (
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="h-7 px-2 text-xs"
+                        disabled={banMutation.isPending}
+                        onClick={() => banMutation.mutate({ id: u.id, isBanned: false })}
+                      >
+                        <CheckCircle className="w-3 h-3 mr-1" /> Unban
+                      </Button>
+                    ) : (
+                      <Button
+                        size="sm"
+                        variant="destructive"
+                        className="h-7 px-2 text-xs"
+                        onClick={() => setBanTarget(u)}
+                      >
+                        <Ban className="w-3 h-3 mr-1" /> Ban
+                      </Button>
+                    )}
+                  </div>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+        {filtered.length === 0 && (
+          <div className="text-center py-10 text-muted-foreground text-sm">No students found.</div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function UserDetailView({ user, onBack }: { user: AdminUserDetail; onBack: () => void }) {
+  const api = useAdminFetch();
+  const qc = useQueryClient();
+  const [showBanModal, setShowBanModal] = useState(false);
+
+  const banMutation = useMutation({
+    mutationFn: ({ isBanned, banDuration }: { isBanned: boolean; banDuration?: string }) =>
+      api.patch(`/admin/users/${user.id}`, { isBanned, ...(banDuration ? { banDuration } : {}) }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["admin", "users"] });
+      setShowBanModal(false);
+      onBack();
+    },
+  });
+
+  const kindColors: Record<string, string> = {
+    post_created: "bg-violet-500/20 text-violet-400",
+    community_join: "bg-emerald-500/20 text-emerald-400",
+    community_leave: "bg-orange-500/20 text-orange-400",
+    follow: "bg-sky-500/20 text-sky-400",
+    comment: "bg-pink-500/20 text-pink-400",
+    like: "bg-red-500/20 text-red-400",
+    marketplace_listed: "bg-yellow-500/20 text-yellow-400",
+    freelance_listed: "bg-teal-500/20 text-teal-400",
+  };
+
+  return (
+    <div className="p-8 max-w-4xl mx-auto space-y-6">
+      {showBanModal && (
+        <BanDurationModal
+          username={user.username ?? "unknown"}
+          onConfirm={(duration) => banMutation.mutate({ isBanned: true, banDuration: duration })}
+          onCancel={() => setShowBanModal(false)}
+        />
+      )}
+      <button
+        onClick={onBack}
+        className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
+      >
+        <ChevronLeft className="w-4 h-4" /> Back to students
+      </button>
+
+      {/* Profile card */}
+      <Card className="bg-card border-card-border overflow-hidden">
+        <div
+          className="h-20"
+          style={{
+            background: `linear-gradient(135deg, ${user.bannerColor || "#1a1040"}, #0c0c14)`,
+          }}
+        />
+        <CardContent className="-mt-10 pb-5">
+          <div className="flex items-end justify-between gap-4 flex-wrap">
+            <div className="flex items-end gap-3">
+              <Avatar className="w-20 h-20 ring-4 ring-card">
+                <AvatarFallback
+                  style={{ backgroundColor: user.avatarColor }}
+                  className="text-white text-2xl font-bold"
+                >
+                  {(user.username?.[0] || "?").toUpperCase()}
+                </AvatarFallback>
+              </Avatar>
+              <div className="pb-1">
+                <div className="flex items-center gap-2">
+                  <div className="text-xl font-bold">@{user.username || "—"}</div>
+                  {user.isBanned && (
+                    <span className="px-2 py-0.5 rounded text-xs bg-red-500/20 text-red-400 font-semibold">
+                      BANNED
+                    </span>
+                  )}
+                  <span
+                    className={`px-2 py-0.5 rounded-full text-xs font-semibold ${
+                      user.role === "admin"
+                        ? "bg-violet-500/20 text-violet-400"
+                        : "bg-secondary text-muted-foreground"
+                    }`}
+                  >
+                    {user.role}
+                  </span>
+                </div>
+                <div className="text-sm text-muted-foreground">{user.bio || "No bio"}</div>
+              </div>
+            </div>
+            {user.isBanned ? (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => banMutation.mutate({ isBanned: false })}
+                disabled={banMutation.isPending}
+              >
+                <CheckCircle className="w-4 h-4 mr-1.5" /> Unban student
+              </Button>
+            ) : (
+              <Button
+                variant="destructive"
+                size="sm"
+                onClick={() => setShowBanModal(true)}
+                disabled={banMutation.isPending}
+              >
+                <Ban className="w-4 h-4 mr-1.5" /> Ban student
+              </Button>
+            )}
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Info grid */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <Card className="bg-card border-card-border">
+          <CardHeader className="pb-3">
+            <CardTitle className="text-sm font-semibold">Contact Information</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            <InfoRow icon={<Mail className="w-4 h-4 text-sky-400" />} label="Email" value={user.email || "Not provided"} />
+            <InfoRow icon={<Phone className="w-4 h-4 text-emerald-400" />} label="Mobile" value={user.mobileNumber || "Not provided"} />
+            <InfoRow icon={<Hash className="w-4 h-4 text-violet-400" />} label="USN" value={user.usn || "Not provided"} mono />
+            <InfoRow icon={<Calendar className="w-4 h-4 text-muted-foreground" />} label="Joined" value={new Date(user.createdAt).toLocaleDateString()} />
+          </CardContent>
+        </Card>
+
+        <Card className="bg-card border-card-border">
+          <CardHeader className="pb-3">
+            <CardTitle className="text-sm font-semibold">Platform Stats</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            <InfoRow icon={<span className="text-yellow-400">🪙</span>} label="Coins" value={String(user.coins)} />
+            <InfoRow icon={<span className="text-teal-400">🏘️</span>} label="Communities" value={String(user.communityCount)} />
+            <InfoRow icon={<span className="text-orange-400">⚡</span>} label="Weekly Points" value={String(user.weeklyPoints)} />
+            {user.skills.length > 0 && (
+              <div className="flex gap-1 flex-wrap pt-1">
+                {user.skills.map((s) => (
+                  <span key={s} className="px-2 py-0.5 rounded-full bg-secondary border border-border text-xs">
+                    {s}
+                  </span>
+                ))}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Activity */}
+      <Card className="bg-card border-card-border">
+        <CardHeader className="pb-3">
+          <CardTitle className="text-sm font-semibold flex items-center gap-2">
+            <Activity className="w-4 h-4 text-primary" /> Activity ({user.activities.length})
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          {user.activities.length === 0 ? (
+            <div className="text-sm text-muted-foreground">No activity yet.</div>
+          ) : (
+            <div className="space-y-2 max-h-72 overflow-y-auto pr-1">
+              {user.activities.map((a) => (
+                <div key={a.id} className="flex items-start gap-3 py-2 border-b border-border last:border-0">
+                  <span
+                    className={`px-2 py-0.5 rounded text-[10px] font-semibold whitespace-nowrap mt-0.5 ${
+                      kindColors[a.kind] || "bg-secondary text-muted-foreground"
+                    }`}
+                  >
+                    {a.kind.replace(/_/g, " ")}
+                  </span>
+                  <div className="flex-1 text-sm">{a.message}</div>
+                  <div className="text-xs text-muted-foreground whitespace-nowrap">
+                    {new Date(a.createdAt).toLocaleDateString()}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
+
+function InfoRow({
+  icon,
+  label,
+  value,
+  mono,
+}: {
+  icon: React.ReactNode;
+  label: string;
+  value: string;
+  mono?: boolean;
+}) {
+  return (
+    <div className="flex items-center gap-3">
+      <span className="w-5 flex-shrink-0">{icon}</span>
+      <span className="text-xs text-muted-foreground w-16 flex-shrink-0">{label}</span>
+      <span className={`text-sm truncate ${mono ? "font-mono" : ""}`}>{value}</span>
+    </div>
+  );
+}
+
+function SingleImageUploader({
+  label,
+  value,
+  onChange,
+  aspectHint,
+}: {
+  label: string;
+  value: string | null | undefined;
+  onChange: (url: string | null) => void;
+  aspectHint?: string;
+}) {
+  const authFetch = useAuthenticatedFetch();
+  const inputRef = useRef<HTMLInputElement>(null);
+  const [uploading, setUploading] = useState(false);
+  const [err, setErr] = useState<string | null>(null);
+
+  async function handleFile(file: File) {
+    if (file.size > 10 * 1024 * 1024) { setErr("Max 10 MB"); return; }
+    setErr(null); setUploading(true);
+    try {
+      const urlRes = await authFetch(`${BASE}/api/storage/uploads/request-url`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name: file.name, size: file.size, contentType: file.type }),
+      });
+      if (!urlRes.ok) throw new Error();
+      const { uploadURL, objectPath } = await urlRes.json();
+      const putRes = await fetch(uploadURL, { method: "PUT", headers: { "Content-Type": file.type }, body: file });
+      if (!putRes.ok) throw new Error();
+      onChange(`${BASE}/api/storage${objectPath}`);
+    } catch { setErr("Upload failed"); } finally { setUploading(false); if (inputRef.current) inputRef.current.value = ""; }
+  }
+
+  return (
+    <div className="space-y-1">
+      <Label className="text-xs">{label} {aspectHint && <span className="text-muted-foreground">({aspectHint})</span>}</Label>
+      {value ? (
+        <div className="relative rounded-lg overflow-hidden border border-border bg-muted group" style={{ height: aspectHint?.includes("banner") ? 80 : 64, width: aspectHint?.includes("banner") ? "100%" : 64 }}>
+          <img src={value} alt={label} className="w-full h-full object-cover" />
+          <button type="button" onClick={() => onChange(null)} className="absolute top-1 right-1 w-5 h-5 bg-black/70 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+            <X className="w-3 h-3 text-white" />
+          </button>
+        </div>
+      ) : (
+        <button
+          type="button"
+          onClick={() => inputRef.current?.click()}
+          disabled={uploading}
+          className="flex items-center gap-2 px-3 py-2 rounded-lg border-2 border-dashed border-border hover:border-primary/50 bg-muted/30 text-xs text-muted-foreground hover:text-foreground transition-colors disabled:opacity-50"
+        >
+          {uploading ? <span className="animate-pulse">Uploading…</span> : <><Upload className="w-3.5 h-3.5" /> Upload image</>}
+        </button>
+      )}
+      {err && <p className="text-xs text-destructive">{err}</p>}
+      <input ref={inputRef} type="file" accept="image/*" className="hidden" onChange={(e) => { if (e.target.files?.[0]) handleFile(e.target.files[0]); }} />
+    </div>
+  );
+}
+
+function CommunityEditPanel({ community, onClose }: { community: Community; onClose: () => void }) {
+  const api = useAdminFetch();
+  const qc = useQueryClient();
+
+  const [form, setForm] = useState({
+    name: community.name,
+    description: community.description,
+    accentColor: community.accentColor,
+    tags: community.tags.join(", "),
+    bannerImageUrl: community.bannerImageUrl ?? null as string | null,
+    profileImageUrl: community.profileImageUrl ?? null as string | null,
+    leaderId: community.leaderId ?? null as number | null,
+  });
+
+  const { data: members = [], isLoading: membersLoading } = useQuery<CommunityMember[]>({
+    queryKey: ["admin", "community-members", community.id],
+    queryFn: () => api.get(`/admin/communities/${community.id}/members`),
+  });
+
+  const updateMutation = useMutation({
+    mutationFn: () =>
+      api.patch(`/admin/communities/${community.id}`, {
+        name: form.name.trim(),
+        description: form.description.trim(),
+        accentColor: form.accentColor,
+        tags: form.tags.split(",").map((t) => t.trim()).filter(Boolean),
+        bannerImageUrl: form.bannerImageUrl,
+        profileImageUrl: form.profileImageUrl,
+        leaderId: form.leaderId,
+      }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["admin", "communities"] });
+      onClose();
+    },
+  });
+
+  const removeMemberMutation = useMutation({
+    mutationFn: (userId: number) => api.del(`/admin/communities/${community.id}/members/${userId}`),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["admin", "community-members", community.id] }),
+  });
+
+  return (
+    <Card className="bg-card border-primary/40 border">
+      <CardHeader className="pb-3">
+        <CardTitle className="text-sm flex items-center justify-between">
+          <span className="flex items-center gap-2"><Pencil className="w-3.5 h-3.5" /> Edit "{community.name}"</span>
+          <button onClick={onClose}><X className="w-4 h-4 text-muted-foreground" /></button>
+        </CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        <div className="space-y-3">
+          <div className="space-y-1">
+            <Label className="text-xs">Name</Label>
+            <Input value={form.name} onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))} />
+          </div>
+          <SingleImageUploader
+            label="Banner Image"
+            aspectHint="banner, 16:9 recommended"
+            value={form.bannerImageUrl}
+            onChange={(url) => setForm((f) => ({ ...f, bannerImageUrl: url }))}
+          />
+          <SingleImageUploader
+            label="Profile Picture"
+            aspectHint="square, 1:1 recommended"
+            value={form.profileImageUrl}
+            onChange={(url) => setForm((f) => ({ ...f, profileImageUrl: url }))}
+          />
+          <div className="space-y-1">
+            <Label className="text-xs">Description</Label>
+            <Textarea value={form.description} onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))} rows={2} />
+          </div>
+          <div className="space-y-1">
+            <Label className="text-xs">Community Leader</Label>
+            <select
+              value={form.leaderId ?? ""}
+              onChange={(e) => setForm((f) => ({ ...f, leaderId: e.target.value ? Number(e.target.value) : null }))}
+              className="w-full h-9 rounded-md border border-input bg-background px-3 text-sm"
+            >
+              <option value="">— No leader assigned —</option>
+              {members.map((m) => (
+                <option key={m.id} value={m.id}>@{m.username}</option>
+              ))}
+            </select>
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            <div className="space-y-1">
+              <Label className="text-xs">Accent Color</Label>
+              <div className="flex items-center gap-2">
+                <input
+                  type="color"
+                  value={form.accentColor}
+                  onChange={(e) => setForm((f) => ({ ...f, accentColor: e.target.value }))}
+                  className="w-8 h-8 rounded cursor-pointer border border-border bg-transparent"
+                />
+                <Input value={form.accentColor} onChange={(e) => setForm((f) => ({ ...f, accentColor: e.target.value }))} className="font-mono text-xs" />
+              </div>
+            </div>
+            <div className="space-y-1">
+              <Label className="text-xs">Tags (comma-separated)</Label>
+              <Input value={form.tags} onChange={(e) => setForm((f) => ({ ...f, tags: e.target.value }))} placeholder="coding, tech" />
+            </div>
+          </div>
+          <div className="flex justify-end gap-2 pt-1">
+            <Button variant="ghost" size="sm" onClick={onClose}>Cancel</Button>
+            <Button size="sm" disabled={!form.name || !form.description || updateMutation.isPending} onClick={() => updateMutation.mutate()}>
+              {updateMutation.isPending ? "Saving…" : "Save Changes"}
+            </Button>
+          </div>
+        </div>
+
+        <div className="border-t border-border pt-4 space-y-2">
+          <div className="flex items-center gap-2 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+            <Users className="w-3.5 h-3.5" /> Members ({members.length})
+          </div>
+          {membersLoading ? (
+            <div className="text-xs text-muted-foreground">Loading members…</div>
+          ) : members.length === 0 ? (
+            <div className="text-xs text-muted-foreground">No members yet.</div>
+          ) : (
+            <div className="space-y-1 max-h-48 overflow-y-auto pr-1">
+              {members.map((m) => (
+                <div key={m.id} className="flex items-center justify-between gap-2 py-1.5 px-2 rounded-lg hover:bg-secondary/40 transition-colors">
+                  <div className="flex items-center gap-2 min-w-0">
+                    <Avatar className="w-6 h-6 flex-shrink-0">
+                      <AvatarFallback style={{ backgroundColor: m.avatarColor ?? "#7c5cff" }} className="text-white text-[10px] font-bold">
+                        {m.username[0]?.toUpperCase()}
+                      </AvatarFallback>
+                    </Avatar>
+                    <span className="text-sm font-medium truncate">@{m.username}</span>
+                    <span className="text-xs text-muted-foreground flex-shrink-0">{new Date(m.joinedAt).toLocaleDateString()}</span>
+                  </div>
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    className="h-6 w-6 p-0 text-muted-foreground hover:text-destructive flex-shrink-0"
+                    disabled={removeMemberMutation.isPending}
+                    onClick={() => { if (confirm(`Remove @${m.username} from this community?`)) removeMemberMutation.mutate(m.id); }}
+                  >
+                    <UserMinus className="w-3.5 h-3.5" />
+                  </Button>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
+function CommunitiesTab() {
+  const api = useAdminFetch();
+  const qc = useQueryClient();
+  const { data: communities = [], isLoading } = useQuery<Community[]>({
+    queryKey: ["admin", "communities"],
+    queryFn: () => api.get("/communities"),
+  });
+
+  const [showForm, setShowForm] = useState(false);
+  const [editingId, setEditingId] = useState<number | null>(null);
+  const [form, setForm] = useState({
+    name: "", slug: "", description: "", accentColor: "#7c5cff", tags: "",
+    bannerImageUrl: null as string | null,
+    profileImageUrl: null as string | null,
+    leaderId: null as number | null,
+  });
+
+  const createMutation = useMutation({
+    mutationFn: () =>
+      api.post("/admin/communities", {
+        name: form.name.trim(),
+        slug: form.slug.trim().toLowerCase().replace(/\s+/g, "-"),
+        description: form.description.trim(),
+        accentColor: form.accentColor,
+        tags: form.tags.split(",").map((t) => t.trim()).filter(Boolean),
+        bannerImageUrl: form.bannerImageUrl,
+        profileImageUrl: form.profileImageUrl,
+        leaderId: form.leaderId,
+      }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["admin", "communities"] });
+      setShowForm(false);
+      setForm({ name: "", slug: "", description: "", accentColor: "#7c5cff", tags: "", bannerImageUrl: null, profileImageUrl: null, leaderId: null });
+    },
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: (id: number) => api.del(`/admin/communities/${id}`),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["admin", "communities"] }),
+  });
+
+  if (isLoading) return <div className="text-muted-foreground text-sm">Loading…</div>;
+
+  const editingCommunity = editingId != null ? communities.find((c) => c.id === editingId) : null;
+
+  return (
+    <div className="space-y-4">
+      <div className="flex items-center justify-between">
+        <div className="text-xs text-muted-foreground">{communities.length} communities</div>
+        <Button size="sm" onClick={() => { setShowForm(!showForm); setEditingId(null); }}>
+          <PlusCircle className="w-4 h-4 mr-1.5" /> New Community
+        </Button>
+      </div>
+
+      {editingCommunity && (
+        <CommunityEditPanel community={editingCommunity} onClose={() => setEditingId(null)} />
+      )}
+
+      {showForm && !editingCommunity && (
+        <Card className="bg-card border-card-border">
+          <CardHeader className="pb-3">
+            <CardTitle className="text-sm flex items-center justify-between">
+              Create Community
+              <button onClick={() => setShowForm(false)}>
+                <X className="w-4 h-4 text-muted-foreground" />
+              </button>
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1">
+                <Label className="text-xs">Name</Label>
+                <Input
+                  value={form.name}
+                  onChange={(e) => {
+                    const name = e.target.value;
+                    setForm((f) => ({
+                      ...f,
+                      name,
+                      slug: name.toLowerCase().replace(/\s+/g, "-").replace(/[^a-z0-9-]/g, ""),
+                    }));
+                  }}
+                  placeholder="Computer Science Club"
+                />
+              </div>
+              <div className="space-y-1">
+                <Label className="text-xs">Slug (URL)</Label>
+                <Input
+                  value={form.slug}
+                  onChange={(e) => setForm((f) => ({ ...f, slug: e.target.value }))}
+                  placeholder="computer-science-club"
+                />
+              </div>
+            </div>
+            <SingleImageUploader
+              label="Banner Image"
+              aspectHint="banner, 16:9 recommended"
+              value={form.bannerImageUrl}
+              onChange={(url) => setForm((f) => ({ ...f, bannerImageUrl: url }))}
+            />
+            <SingleImageUploader
+              label="Profile Picture"
+              aspectHint="square, 1:1 recommended"
+              value={form.profileImageUrl}
+              onChange={(url) => setForm((f) => ({ ...f, profileImageUrl: url }))}
+            />
+            <div className="space-y-1">
+              <Label className="text-xs">Description</Label>
+              <Textarea
+                value={form.description}
+                onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))}
+                rows={2}
+                placeholder="What is this community about?"
+              />
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1">
+                <Label className="text-xs">Accent Color</Label>
+                <div className="flex items-center gap-2">
+                  <input
+                    type="color"
+                    value={form.accentColor}
+                    onChange={(e) => setForm((f) => ({ ...f, accentColor: e.target.value }))}
+                    className="w-8 h-8 rounded cursor-pointer border border-border bg-transparent"
+                  />
+                  <Input
+                    value={form.accentColor}
+                    onChange={(e) => setForm((f) => ({ ...f, accentColor: e.target.value }))}
+                    className="font-mono text-xs"
+                  />
+                </div>
+              </div>
+              <div className="space-y-1">
+                <Label className="text-xs">Tags (comma-separated)</Label>
+                <Input
+                  value={form.tags}
+                  onChange={(e) => setForm((f) => ({ ...f, tags: e.target.value }))}
+                  placeholder="coding, tech, cs"
+                />
+              </div>
+            </div>
+            <div className="flex justify-end gap-2 pt-1">
+              <Button variant="ghost" size="sm" onClick={() => setShowForm(false)}>
+                Cancel
+              </Button>
+              <Button
+                size="sm"
+                disabled={!form.name || !form.slug || !form.description || createMutation.isPending}
+                onClick={() => createMutation.mutate()}
+              >
+                {createMutation.isPending ? "Creating…" : "Create Community"}
+              </Button>
+            </div>
+            {createMutation.isError && (
+              <p className="text-xs text-destructive">Failed — slug may already be taken.</p>
+            )}
+          </CardContent>
+        </Card>
+      )}
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+        {communities.map((c) => (
+          <Card key={c.id} className={`bg-card border-card-border transition-colors ${editingId === c.id ? "border-primary/40" : ""}`}>
+            <CardContent className="py-4 flex items-start justify-between gap-3">
+              <div className="flex items-start gap-3 min-w-0">
+                <div
+                  className="w-10 h-10 rounded-lg flex-shrink-0 mt-0.5 overflow-hidden flex items-center justify-center"
+                  style={{ background: c.accentColor + "33", border: `2px solid ${c.accentColor}44` }}
+                >
+                  {c.profileImageUrl
+                    ? <img src={c.profileImageUrl} alt={c.name} className="w-full h-full object-cover" />
+                    : <ImageIcon className="w-5 h-5 text-muted-foreground" />}
+                </div>
+                <div className="min-w-0">
+                  <div className="font-medium text-sm">{c.name}</div>
+                  <div className="text-xs text-muted-foreground line-clamp-2">{c.description}</div>
+                  <div className="flex flex-wrap gap-1 mt-1">
+                    {c.tags.slice(0, 3).map((t) => (
+                      <span key={t} className="px-1.5 py-0.5 rounded bg-secondary text-[10px]">
+                        {t}
+                      </span>
+                    ))}
+                    {c.memberCount != null && (
+                      <span className="px-1.5 py-0.5 rounded bg-secondary text-[10px] text-muted-foreground">
+                        {c.memberCount} members
+                      </span>
+                    )}
+                  </div>
+                </div>
+              </div>
+              <div className="flex gap-1 flex-shrink-0">
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  className="h-7 w-7 p-0"
+                  onClick={() => setEditingId(editingId === c.id ? null : c.id)}
+                >
+                  <Pencil className="w-3.5 h-3.5" />
+                </Button>
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  className="text-destructive hover:text-destructive h-7 w-7 p-0"
+                  disabled={deleteMutation.isPending}
+                  onClick={() => {
+                    if (confirm(`Delete "${c.name}"?`)) deleteMutation.mutate(c.id);
+                  }}
+                >
+                  <Trash2 className="w-3.5 h-3.5" />
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function MarketplaceTab() {
+  const api = useAdminFetch();
+  const qc = useQueryClient();
+  const { data: items = [], isLoading } = useQuery<MarketplaceItem[]>({
+    queryKey: ["admin", "marketplace"],
+    queryFn: () => api.get("/admin/marketplace"),
+  });
+
+  const [editing, setEditing] = useState<MarketplaceItem | null>(null);
+  const [editForm, setEditForm] = useState({ title: "", description: "", price: "", category: "", contactInfo: "" });
+
+  const deleteMutation = useMutation({
+    mutationFn: (id: number) => api.del(`/admin/marketplace/${id}`),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["admin", "marketplace"] }),
+  });
+
+  const updateMutation = useMutation({
+    mutationFn: () =>
+      api.patch(`/admin/marketplace/${editing!.id}`, {
+        title: editForm.title.trim(),
+        description: editForm.description.trim(),
+        price: parseFloat(editForm.price),
+        category: editForm.category.trim(),
+        contactInfo: editForm.contactInfo.trim() || undefined,
+      }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["admin", "marketplace"] });
+      setEditing(null);
+    },
+  });
+
+  function startEdit(item: MarketplaceItem) {
+    setEditing(item);
+    setEditForm({
+      title: item.title,
+      description: item.description,
+      price: String(item.price),
+      category: item.category,
+      contactInfo: item.contactInfo || "",
+    });
+  }
+
+  if (isLoading) return <div className="text-muted-foreground text-sm">Loading…</div>;
+
+  return (
+    <div className="space-y-4">
+      <div className="text-xs text-muted-foreground">{items.length} listings</div>
+
+      {editing && (
+        <Card className="bg-card border-card-border">
+          <CardHeader className="pb-3">
+            <CardTitle className="text-sm flex items-center justify-between">
+              Edit Listing
+              <button onClick={() => setEditing(null)}>
+                <X className="w-4 h-4 text-muted-foreground" />
+              </button>
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1">
+                <Label className="text-xs">Title</Label>
+                <Input value={editForm.title} onChange={(e) => setEditForm((f) => ({ ...f, title: e.target.value }))} />
+              </div>
+              <div className="space-y-1">
+                <Label className="text-xs">Price (₹)</Label>
+                <Input type="number" value={editForm.price} onChange={(e) => setEditForm((f) => ({ ...f, price: e.target.value }))} />
+              </div>
+            </div>
+            <div className="space-y-1">
+              <Label className="text-xs">Description</Label>
+              <Textarea rows={2} value={editForm.description} onChange={(e) => setEditForm((f) => ({ ...f, description: e.target.value }))} />
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1">
+                <Label className="text-xs">Category</Label>
+                <Input value={editForm.category} onChange={(e) => setEditForm((f) => ({ ...f, category: e.target.value }))} />
+              </div>
+              <div className="space-y-1">
+                <Label className="text-xs">Contact Info</Label>
+                <Input value={editForm.contactInfo} onChange={(e) => setEditForm((f) => ({ ...f, contactInfo: e.target.value }))} />
+              </div>
+            </div>
+            <div className="flex justify-end gap-2">
+              <Button variant="ghost" size="sm" onClick={() => setEditing(null)}>Cancel</Button>
+              <Button size="sm" disabled={updateMutation.isPending} onClick={() => updateMutation.mutate()}>
+                {updateMutation.isPending ? "Saving…" : "Save changes"}
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      <div className="rounded-xl border border-border overflow-hidden">
+        <table className="w-full text-sm">
+          <thead className="bg-secondary/60 border-b border-border">
+            <tr>
+              <th className="text-left px-4 py-3 font-medium text-muted-foreground">Title</th>
+              <th className="text-left px-4 py-3 font-medium text-muted-foreground">Seller</th>
+              <th className="text-left px-4 py-3 font-medium text-muted-foreground">Category</th>
+              <th className="text-left px-4 py-3 font-medium text-muted-foreground">Price</th>
+              <th className="text-left px-4 py-3 font-medium text-muted-foreground">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {items.map((item) => (
+              <tr key={item.id} className="border-t border-border hover:bg-secondary/20 transition-colors">
+                <td className="px-4 py-3 font-medium max-w-48 truncate">{item.title}</td>
+                <td className="px-4 py-3 text-muted-foreground">@{item.sellerUsername}</td>
+                <td className="px-4 py-3">
+                  <span className="px-2 py-0.5 rounded-full bg-secondary text-xs">{item.category}</span>
+                </td>
+                <td className="px-4 py-3 font-medium">₹{item.price}</td>
+                <td className="px-4 py-3">
+                  <div className="flex gap-2">
+                    <Button size="sm" variant="ghost" className="h-7 px-2 text-xs" onClick={() => startEdit(item)}>
+                      <Pencil className="w-3 h-3 mr-1" /> Edit
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      className="h-7 px-2 text-xs text-destructive hover:text-destructive"
+                      disabled={deleteMutation.isPending}
+                      onClick={() => {
+                        if (confirm(`Delete "${item.title}"?`)) deleteMutation.mutate(item.id);
+                      }}
+                    >
+                      <Trash2 className="w-3 h-3 mr-1" /> Delete
+                    </Button>
+                  </div>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+        {items.length === 0 && (
+          <div className="text-center py-10 text-muted-foreground text-sm">No marketplace listings.</div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function FreelanceTab() {
+  const api = useAdminFetch();
+  const qc = useQueryClient();
+  const { data: items = [], isLoading } = useQuery<FreelanceItem[]>({
+    queryKey: ["admin", "freelance"],
+    queryFn: () => api.get("/admin/freelance"),
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: (id: number) => api.del(`/admin/freelance/${id}`),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["admin", "freelance"] }),
+  });
+
+  if (isLoading) return <div className="text-muted-foreground text-sm">Loading…</div>;
+
+  return (
+    <div className="space-y-4">
+      <div className="text-xs text-muted-foreground">{items.length} services</div>
+      <div className="rounded-xl border border-border overflow-hidden">
+        <table className="w-full text-sm">
+          <thead className="bg-secondary/60 border-b border-border">
+            <tr>
+              <th className="text-left px-4 py-3 font-medium text-muted-foreground">Title</th>
+              <th className="text-left px-4 py-3 font-medium text-muted-foreground">Provider</th>
+              <th className="text-left px-4 py-3 font-medium text-muted-foreground">Category</th>
+              <th className="text-left px-4 py-3 font-medium text-muted-foreground">Price</th>
+              <th className="text-left px-4 py-3 font-medium text-muted-foreground">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {items.map((item) => (
+              <tr key={item.id} className="border-t border-border hover:bg-secondary/20 transition-colors">
+                <td className="px-4 py-3 font-medium max-w-48 truncate">{item.title}</td>
+                <td className="px-4 py-3 text-muted-foreground">@{item.providerUsername}</td>
+                <td className="px-4 py-3">
+                  <span className="px-2 py-0.5 rounded-full bg-secondary text-xs">{item.category}</span>
+                </td>
+                <td className="px-4 py-3 font-medium">₹{item.price}</td>
+                <td className="px-4 py-3">
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    className="h-7 px-2 text-xs text-destructive hover:text-destructive"
+                    disabled={deleteMutation.isPending}
+                    onClick={() => {
+                      if (confirm(`Delete "${item.title}"?`)) deleteMutation.mutate(item.id);
+                    }}
+                  >
+                    <Trash2 className="w-3 h-3 mr-1" /> Delete
+                  </Button>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+        {items.length === 0 && (
+          <div className="text-center py-10 text-muted-foreground text-sm">No freelance services.</div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function ApplicationsTab({ isAdmin }: { isAdmin: boolean }) {
+  const api = useAdminFetch();
+  const qc = useQueryClient();
+  const [search, setSearch] = useState("");
+  const [statusFilter, setStatusFilter] = useState<"all" | "pending" | "approved" | "rejected">("pending");
+  const [rejectTarget, setRejectTarget] = useState<Application | null>(null);
+  const [rejectReason, setRejectReason] = useState("");
+  const [expanded, setExpanded] = useState<number | null>(null);
+
+  const { data: applications = [], isLoading, refetch } = useQuery<Application[]>({
+    queryKey: ["admin", "applications", statusFilter],
+    queryFn: () => api.get(`/admin/applications?status=${statusFilter === "all" ? "" : statusFilter}`),
+  });
+
+  const approveMutation = useMutation({
+    mutationFn: (id: number) => api.post(`/admin/applications/${id}/approve`, {}),
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ["admin", "applications"] }); void refetch(); },
+  });
+
+  const rejectMutation = useMutation({
+    mutationFn: ({ id, reason }: { id: number; reason: string }) =>
+      api.post(`/admin/applications/${id}/reject`, { reason }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["admin", "applications"] });
+      void refetch();
+      setRejectTarget(null);
+      setRejectReason("");
+    },
+  });
+
+  const filtered = applications.filter((a) => {
+    if (!search) return true;
+    const s = search.toLowerCase();
+    return (
+      a.name?.toLowerCase().includes(s) ||
+      a.usn?.toLowerCase().includes(s) ||
+      a.email?.toLowerCase().includes(s)
+    );
+  });
+
+  const storageUrl = (path: string | null) =>
+    path ? `${BASE}/api/storage${path}` : null;
+
+  function statusBadge(status: string) {
+    if (status === "pending")
+      return <span className="px-2 py-0.5 rounded-full bg-yellow-500/20 text-yellow-400 border border-yellow-500/30 text-[10px] font-bold uppercase tracking-wider">Pending</span>;
+    if (status === "approved")
+      return <span className="px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 text-[10px] font-bold uppercase tracking-wider">Approved</span>;
+    return <span className="px-2 py-0.5 rounded-full bg-rose-500/20 text-rose-400 border border-rose-500/30 text-[10px] font-bold uppercase tracking-wider">Rejected</span>;
+  }
+
+  if (isLoading) return <div className="text-muted-foreground text-sm">Loading…</div>;
+
+  return (
+    <div className="space-y-4">
+      {rejectTarget && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+          <div className="bg-card border border-border rounded-xl shadow-2xl w-full max-w-sm p-6 space-y-4">
+            <div className="flex items-start justify-between gap-2">
+              <div className="font-bold text-base flex items-center gap-2">
+                <AlertTriangle className="w-4 h-4 text-yellow-400" />
+                Reject Application
+              </div>
+              <button onClick={() => { setRejectTarget(null); setRejectReason(""); }}>
+                <X className="w-4 h-4 text-muted-foreground" />
+              </button>
+            </div>
+            <p className="text-sm text-muted-foreground">
+              Rejecting <span className="text-foreground font-semibold">{rejectTarget.name}</span> ({rejectTarget.usn})
+            </p>
+            <Textarea
+              placeholder="Reason for rejection (will be shown to the student)..."
+              value={rejectReason}
+              onChange={(e) => setRejectReason(e.target.value)}
+              rows={3}
+              maxLength={500}
+            />
+            <div className="flex gap-2">
+              <Button variant="ghost" size="sm" className="flex-1" onClick={() => { setRejectTarget(null); setRejectReason(""); }}>
+                Cancel
+              </Button>
+              <Button
+                size="sm"
+                variant="destructive"
+                className="flex-1"
+                disabled={!rejectReason.trim() || rejectMutation.isPending}
+                onClick={() => rejectMutation.mutate({ id: rejectTarget.id, reason: rejectReason.trim() })}
+              >
+                {rejectMutation.isPending ? "Rejecting…" : "Reject"}
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      <div className="flex items-center gap-3 flex-wrap">
+        <div className="relative flex-1 min-w-48">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+          <Input
+            placeholder="Search by name, USN, or email…"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="pl-9"
+          />
+        </div>
+        <div className="flex gap-1 p-1 bg-secondary rounded-lg">
+          {(["pending", "approved", "rejected", "all"] as const).map((s) => (
+            <button
+              key={s}
+              onClick={() => setStatusFilter(s)}
+              className={`px-3 py-1 rounded-md text-xs font-medium transition-colors capitalize ${
+                statusFilter === s
+                  ? "bg-background text-foreground shadow-sm"
+                  : "text-muted-foreground hover:text-foreground"
+              }`}
+            >
+              {s}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      <div className="text-xs text-muted-foreground">
+        {filtered.length} application{filtered.length !== 1 ? "s" : ""}
+      </div>
+
+      <div className="space-y-3">
+        {filtered.length === 0 && (
+          <div className="text-center py-12 text-muted-foreground text-sm">No applications found.</div>
+        )}
+        {filtered.map((app) => (
+          <Card key={app.id} className="bg-card border-card-border">
+            <CardContent className="p-4 space-y-3">
+              <div className="flex items-start gap-3">
+                <Avatar className="w-10 h-10 shrink-0">
+                  <AvatarFallback style={{ backgroundColor: app.avatarColor }} className="text-white font-semibold">
+                    {app.name?.[0]?.toUpperCase() ?? "?"}
+                  </AvatarFallback>
+                </Avatar>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <span className="font-semibold text-sm">{app.name}</span>
+                    {statusBadge(app.accountStatus)}
+                    {app.accountStatus === "approved" && app.reviewerUsername && (
+                      <span className="text-[10px] text-muted-foreground">
+                        by @{app.reviewerUsername} ({app.reviewerRole})
+                      </span>
+                    )}
+                    {app.accountStatus === "rejected" && app.reviewerUsername && (
+                      <span className="text-[10px] text-muted-foreground">
+                        by @{app.reviewerUsername}
+                      </span>
+                    )}
+                  </div>
+                  <div className="flex flex-wrap gap-x-4 gap-y-0.5 mt-1">
+                    <span className="text-xs font-mono text-muted-foreground">{app.usn}</span>
+                    <span className="text-xs text-muted-foreground">{app.email}</span>
+                    {app.branch && <span className="text-xs text-muted-foreground">{app.branch} · Sem {app.semester}</span>}
+                  </div>
+                  {app.accountStatus === "rejected" && app.rejectionReason && (
+                    <div className="mt-1 text-xs text-rose-400 bg-rose-500/10 px-2 py-1 rounded border border-rose-500/20">
+                      Reason: {app.rejectionReason}
+                    </div>
+                  )}
+                </div>
+                <div className="text-xs text-muted-foreground shrink-0 text-right">
+                  {new Date(app.createdAt).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })}
+                </div>
+              </div>
+
+              <div className="flex items-center gap-2 flex-wrap">
+                <button
+                  onClick={() => setExpanded(expanded === app.id ? null : app.id)}
+                  className="flex items-center gap-1.5 text-xs text-primary hover:underline"
+                >
+                  <FileText className="w-3.5 h-3.5" />
+                  {expanded === app.id ? "Hide documents" : "View documents"}
+                </button>
+                {app.accountStatus === "pending" && (
+                  <div className="flex gap-2 ml-auto">
+                    <Button
+                      size="sm"
+                      className="h-7 px-3 text-xs bg-emerald-600 hover:bg-emerald-700 text-white gap-1"
+                      disabled={approveMutation.isPending}
+                      onClick={() => approveMutation.mutate(app.id)}
+                    >
+                      <CheckCircle className="w-3.5 h-3.5" />
+                      Approve
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="destructive"
+                      className="h-7 px-3 text-xs gap-1"
+                      onClick={() => { setRejectTarget(app); setRejectReason(""); }}
+                    >
+                      <X className="w-3.5 h-3.5" />
+                      Reject
+                    </Button>
+                  </div>
+                )}
+                {app.accountStatus !== "pending" && isAdmin && (
+                  <div className="flex gap-2 ml-auto">
+                    {app.accountStatus !== "approved" && (
+                      <Button
+                        size="sm"
+                        className="h-7 px-3 text-xs bg-emerald-600/80 hover:bg-emerald-700 text-white gap-1"
+                        disabled={approveMutation.isPending}
+                        onClick={() => approveMutation.mutate(app.id)}
+                      >
+                        <CheckCircle className="w-3.5 h-3.5" />
+                        Re-approve
+                      </Button>
+                    )}
+                    {app.accountStatus !== "rejected" && (
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        className="h-7 px-3 text-xs text-destructive hover:text-destructive gap-1"
+                        onClick={() => { setRejectTarget(app); setRejectReason(""); }}
+                      >
+                        <X className="w-3.5 h-3.5" />
+                        Reject
+                      </Button>
+                    )}
+                  </div>
+                )}
+              </div>
+
+              {expanded === app.id && (
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1 border-t border-border/50">
+                  {(
+                    [
+                      { label: "College ID Card", url: storageUrl(app.idCardUrl) },
+                      { label: "Fee Receipt", url: storageUrl(app.feeReceiptUrl) },
+                    ] as { label: string; url: string | null }[]
+                  ).map(({ label, url }) => (
+                    <div key={label} className="space-y-1">
+                      <div className="text-xs font-medium text-muted-foreground">{label}</div>
+                      {url ? (
+                        <a
+                          href={url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="flex items-center gap-2 px-3 py-2 rounded-lg border border-border bg-secondary/40 hover:bg-secondary/70 transition-colors text-xs text-primary"
+                        >
+                          <ExternalLink className="w-3.5 h-3.5" />
+                          Open document
+                        </a>
+                      ) : (
+                        <div className="px-3 py-2 rounded-lg border border-border bg-secondary/40 text-xs text-muted-foreground">
+                          Not uploaded
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function ReportsTab({ isAdmin }: { isAdmin: boolean }) {
+  const api = useAdminFetch();
+  const qc = useQueryClient();
+  const [search, setSearch] = useState("");
+  const [reviewTarget, setReviewTarget] = useState<Report | null>(null);
+  const [reviewNote, setReviewNote] = useState("");
+  const [reviewStatus, setReviewStatus] = useState<"reviewed" | "dismissed">("reviewed");
+
+  const { data: reports = [], isLoading } = useQuery<Report[]>({
+    queryKey: ["admin", "reports"],
+    queryFn: () => api.get("/admin/reports"),
+  });
+
+  const reviewMutation = useMutation({
+    mutationFn: ({ id, status, note }: { id: number; status: string; note: string }) =>
+      api.patch(`/admin/reports/${id}`, { status, reviewNote: note || undefined }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["admin", "reports"] });
+      setReviewTarget(null);
+      setReviewNote("");
+    },
+  });
+
+  const filtered = reports.filter((r) => {
+    if (!search) return true;
+    const s = search.toLowerCase();
+    return (
+      r.targetType.includes(s) ||
+      r.description.toLowerCase().includes(s) ||
+      r.reporterUsername?.toLowerCase().includes(s) ||
+      r.targetUsn?.toLowerCase().includes(s)
+    );
+  });
+
+  function typeBadge(type: string) {
+    const colors: Record<string, string> = {
+      post: "bg-sky-500/20 text-sky-400 border-sky-500/30",
+      marketplace: "bg-orange-500/20 text-orange-400 border-orange-500/30",
+      freelance: "bg-purple-500/20 text-purple-400 border-purple-500/30",
+      hackathon: "bg-yellow-500/20 text-yellow-400 border-yellow-500/30",
+      usn_conflict: "bg-rose-500/20 text-rose-400 border-rose-500/30",
+    };
+    const cls = colors[type] ?? "bg-secondary text-muted-foreground border-border";
+    return (
+      <span className={`px-2 py-0.5 rounded-full border text-[10px] font-bold uppercase tracking-wider ${cls}`}>
+        {type.replace("_", " ")}
+      </span>
+    );
+  }
+
+  function statusBadge(status: string) {
+    if (status === "pending")
+      return <span className="text-[10px] font-bold uppercase tracking-wider text-yellow-400">● Pending</span>;
+    if (status === "reviewed")
+      return <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-400">✓ Reviewed</span>;
+    return <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">— Dismissed</span>;
+  }
+
+  if (isLoading) return <div className="text-muted-foreground text-sm">Loading…</div>;
+
+  return (
+    <div className="space-y-4">
+      {reviewTarget && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+          <div className="bg-card border border-border rounded-xl shadow-2xl w-full max-w-sm p-6 space-y-4">
+            <div className="flex items-start justify-between gap-2">
+              <div className="font-bold text-base flex items-center gap-2">
+                <Flag className="w-4 h-4 text-yellow-400" />
+                Review Report #{reviewTarget.id}
+              </div>
+              <button onClick={() => { setReviewTarget(null); setReviewNote(""); }}>
+                <X className="w-4 h-4 text-muted-foreground" />
+              </button>
+            </div>
+            <div className="space-y-1 text-xs text-muted-foreground">
+              <div><span className="text-foreground font-medium">Type: </span>{reviewTarget.targetType}</div>
+              {reviewTarget.targetId && <div><span className="text-foreground font-medium">Target ID: </span>#{reviewTarget.targetId}</div>}
+              {reviewTarget.targetUsn && <div><span className="text-foreground font-medium">USN: </span>{reviewTarget.targetUsn}</div>}
+              <div className="pt-1"><span className="text-foreground font-medium">Description: </span>{reviewTarget.description}</div>
+            </div>
+            <div className="flex gap-2">
+              {(["reviewed", "dismissed"] as const).map((s) => (
+                <button
+                  key={s}
+                  onClick={() => setReviewStatus(s)}
+                  className={`flex-1 py-2 rounded-lg border text-xs font-medium transition-colors capitalize ${
+                    reviewStatus === s
+                      ? s === "reviewed"
+                        ? "border-emerald-500/50 bg-emerald-500/10 text-emerald-400"
+                        : "border-muted-foreground/50 bg-secondary text-foreground"
+                      : "border-border text-muted-foreground hover:text-foreground"
+                  }`}
+                >
+                  {s}
+                </button>
+              ))}
+            </div>
+            <Textarea
+              placeholder="Optional note for your team…"
+              value={reviewNote}
+              onChange={(e) => setReviewNote(e.target.value)}
+              rows={2}
+              maxLength={500}
+            />
+            <div className="flex gap-2">
+              <Button variant="ghost" size="sm" className="flex-1" onClick={() => { setReviewTarget(null); setReviewNote(""); }}>
+                Cancel
+              </Button>
+              <Button
+                size="sm"
+                className="flex-1"
+                disabled={reviewMutation.isPending}
+                onClick={() => reviewMutation.mutate({ id: reviewTarget.id, status: reviewStatus, note: reviewNote.trim() })}
+              >
+                {reviewMutation.isPending ? "Saving…" : "Save"}
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      <div className="relative">
+        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+        <Input
+          placeholder="Search reports by type, description, or reporter…"
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          className="pl-9"
+        />
+      </div>
+
+      <div className="text-xs text-muted-foreground">
+        {filtered.length} report{filtered.length !== 1 ? "s" : ""}
+      </div>
+
+      <div className="rounded-xl border border-border overflow-hidden">
+        <table className="w-full text-sm">
+          <thead className="bg-secondary/60 border-b border-border">
+            <tr>
+              <th className="text-left px-4 py-3 font-medium text-muted-foreground">Type</th>
+              <th className="text-left px-4 py-3 font-medium text-muted-foreground">Reporter</th>
+              <th className="text-left px-4 py-3 font-medium text-muted-foreground">Description</th>
+              <th className="text-left px-4 py-3 font-medium text-muted-foreground">Status</th>
+              <th className="text-left px-4 py-3 font-medium text-muted-foreground">Date</th>
+              <th className="text-left px-4 py-3 font-medium text-muted-foreground">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {filtered.map((r) => (
+              <tr key={r.id} className="border-t border-border hover:bg-secondary/20 transition-colors">
+                <td className="px-4 py-3">{typeBadge(r.targetType)}</td>
+                <td className="px-4 py-3 text-muted-foreground text-xs">
+                  {r.reporterUsername ? `@${r.reporterUsername}` : "Anonymous"}
+                </td>
+                <td className="px-4 py-3 max-w-xs">
+                  <p className="text-xs text-muted-foreground line-clamp-2">{r.description}</p>
+                </td>
+                <td className="px-4 py-3">{statusBadge(r.status)}</td>
+                <td className="px-4 py-3 text-xs text-muted-foreground whitespace-nowrap">
+                  {new Date(r.createdAt).toLocaleDateString("en-IN", { day: "numeric", month: "short" })}
+                </td>
+                <td className="px-4 py-3">
+                  {r.status === "pending" && (
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      className="h-7 px-2 text-xs"
+                      onClick={() => { setReviewTarget(r); setReviewNote(r.reviewNote ?? ""); setReviewStatus("reviewed"); }}
+                    >
+                      Review
+                    </Button>
+                  )}
+                  {r.status !== "pending" && (
+                    <button
+                      className="text-xs text-muted-foreground hover:text-foreground"
+                      onClick={() => { setReviewTarget(r); setReviewNote(r.reviewNote ?? ""); setReviewStatus("reviewed"); }}
+                    >
+                      Edit
+                    </button>
+                  )}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+        {filtered.length === 0 && (
+          <div className="text-center py-10 text-muted-foreground text-sm">No reports found.</div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function ModeratorsTab() {
+  const api = useAdminFetch();
+  const qc = useQueryClient();
+
+  const { data: mods = [], isLoading } = useQuery<Moderator[]>({
+    queryKey: ["admin", "moderators"],
+    queryFn: () => api.get("/admin/moderators"),
+  });
+
+  const [showForm, setShowForm] = useState(false);
+  const [form, setForm] = useState({ username: "", password: "", name: "", email: "" });
+  const [showPw, setShowPw] = useState(false);
+
+  const createMutation = useMutation({
+    mutationFn: () =>
+      api.post("/admin/moderators", {
+        username: form.username.trim().toLowerCase(),
+        password: form.password,
+        name: form.name.trim() || undefined,
+        email: form.email.trim() || undefined,
+      }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["admin", "moderators"] });
+      setShowForm(false);
+      setForm({ username: "", password: "", name: "", email: "" });
+    },
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: (id: number) => api.del(`/admin/moderators/${id}`),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["admin", "moderators"] }),
+  });
+
+  if (isLoading) return <div className="text-muted-foreground text-sm">Loading…</div>;
+
+  return (
+    <div className="space-y-4">
+      <div className="flex items-center justify-between">
+        <div className="text-xs text-muted-foreground">{mods.length} moderator{mods.length !== 1 ? "s" : ""}</div>
+        <Button size="sm" onClick={() => setShowForm(!showForm)}>
+          <PlusCircle className="w-4 h-4 mr-1.5" /> Add Moderator
+        </Button>
+      </div>
+
+      {showForm && (
+        <Card className="bg-card border-card-border">
+          <CardHeader className="pb-3">
+            <CardTitle className="text-sm flex items-center justify-between">
+              Create Moderator Account
+              <button onClick={() => setShowForm(false)}><X className="w-4 h-4 text-muted-foreground" /></button>
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1">
+                <Label className="text-xs">Username <span className="text-destructive">*</span></Label>
+                <Input
+                  value={form.username}
+                  onChange={(e) => setForm((f) => ({ ...f, username: e.target.value.toLowerCase().replace(/[^a-z0-9_]/g, "") }))}
+                  placeholder="mod_username"
+                />
+                <p className="text-[10px] text-muted-foreground">Lowercase, letters, numbers, underscores only</p>
+              </div>
+              <div className="space-y-1">
+                <Label className="text-xs">Password <span className="text-destructive">*</span></Label>
+                <div className="relative">
+                  <Input
+                    type={showPw ? "text" : "password"}
+                    value={form.password}
+                    onChange={(e) => setForm((f) => ({ ...f, password: e.target.value }))}
+                    placeholder="Min 6 characters"
+                    className="pr-9"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPw((v) => !v)}
+                    className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                  >
+                    {showPw ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                  </button>
+                </div>
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1">
+                <Label className="text-xs">Display Name</Label>
+                <Input value={form.name} onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))} placeholder="Full name (optional)" />
+              </div>
+              <div className="space-y-1">
+                <Label className="text-xs">Email</Label>
+                <Input type="email" value={form.email} onChange={(e) => setForm((f) => ({ ...f, email: e.target.value }))} placeholder="mod@college.edu (optional)" />
+              </div>
+            </div>
+            <div className="flex justify-end gap-2 pt-1">
+              <Button variant="ghost" size="sm" onClick={() => setShowForm(false)}>Cancel</Button>
+              <Button
+                size="sm"
+                disabled={!form.username || form.password.length < 6 || createMutation.isPending}
+                onClick={() => createMutation.mutate()}
+              >
+                {createMutation.isPending ? "Creating…" : "Create Moderator"}
+              </Button>
+            </div>
+            {createMutation.isError && (
+              <p className="text-xs text-destructive">
+                Failed — username may already be taken.
+              </p>
+            )}
+          </CardContent>
+        </Card>
+      )}
+
+      <div className="rounded-xl border border-border overflow-hidden">
+        <table className="w-full text-sm">
+          <thead className="bg-secondary/60 border-b border-border">
+            <tr>
+              <th className="text-left px-4 py-3 font-medium text-muted-foreground">Username</th>
+              <th className="text-left px-4 py-3 font-medium text-muted-foreground">Name</th>
+              <th className="text-left px-4 py-3 font-medium text-muted-foreground">Email</th>
+              <th className="text-left px-4 py-3 font-medium text-muted-foreground">Created</th>
+              <th className="text-left px-4 py-3 font-medium text-muted-foreground">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {mods.map((m) => (
+              <tr key={m.id} className="border-t border-border hover:bg-secondary/20 transition-colors">
+                <td className="px-4 py-3">
+                  <div className="flex items-center gap-2">
+                    <div className="w-7 h-7 rounded-full bg-gradient-to-br from-violet-500 to-purple-600 flex items-center justify-center text-white text-xs font-bold flex-shrink-0">
+                      {m.username?.[0]?.toUpperCase() ?? "M"}
+                    </div>
+                    <span className="font-medium">@{m.username}</span>
+                  </div>
+                </td>
+                <td className="px-4 py-3 text-muted-foreground">{m.name ?? "—"}</td>
+                <td className="px-4 py-3 text-muted-foreground text-xs">{m.email ?? "—"}</td>
+                <td className="px-4 py-3 text-xs text-muted-foreground whitespace-nowrap">
+                  {new Date(m.createdAt).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })}
+                </td>
+                <td className="px-4 py-3">
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    className="text-destructive hover:text-destructive h-7 px-2"
+                    disabled={deleteMutation.isPending}
+                    onClick={() => {
+                      if (confirm(`Remove moderator @${m.username}? This will delete their account permanently.`))
+                        deleteMutation.mutate(m.id);
+                    }}
+                  >
+                    <Trash2 className="w-3.5 h-3.5 mr-1" /> Remove
+                  </Button>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+        {mods.length === 0 && (
+          <div className="text-center py-10 text-muted-foreground text-sm">
+            No moderators yet. Add one to give them access to review applications and reports.
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}

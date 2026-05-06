@@ -1,0 +1,50 @@
+uploads = []
+outputs = []
+
+[[generated]]
+id = "2oVowcMMe2Lk9TY74-9QE"
+uri = "file://artifacts/unify/public/communities/frontend-builders.png"
+type = "image"
+title = "generated_image"
+
+[[generated]]
+id = "-GC4rOhJmjgwj50ioeIfD"
+uri = "file://artifacts/unify/public/communities/ml-lab.png"
+type = "image"
+title = "generated_image"
+
+[[generated]]
+id = "f4e6996x_3XhZUeiRQ86y"
+uri = "file://artifacts/unify/public/communities/indie-game-dev.png"
+type = "image"
+title = "generated_image"
+
+[[generated]]
+id = "1rlfLLuiqP29uwsCO-vCT"
+uri = "file://artifacts/unify/public/communities/study-grind.png"
+type = "image"
+title = "generated_image"
+
+[[generated]]
+id = "h7-qaziM5Phr7s0N5QIPX"
+uri = "file://artifacts/unify/public/communities/founders-circle.png"
+type = "image"
+title = "generated_image"
+
+[[generated]]
+id = "BVpsxn3TIUK7ae8lHTcIE"
+uri = "file://artifacts/unify/public/communities/creative-corner.png"
+type = "image"
+title = "generated_image"
+
+[[generated]]
+id = "wL0Z5ckN1tzoaJYR9_biG"
+uri = "file://artifacts/unify/public/communities/cyber-guild.png"
+type = "image"
+title = "generated_image"
+
+[[generated]]
+id = "Zp8mUwiUVWe04WYho0fI7"
+uri = "file://artifacts/unify/public/communities/design-studio.png"
+type = "image"
+title = "generated_image"

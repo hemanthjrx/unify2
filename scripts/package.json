@@ -1,0 +1,24 @@
+{
+  "name": "@workspace/scripts",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "hello": "tsx ./src/hello.ts",
+    "seed-communities": "tsx ./src/seed-communities.ts",
+    "migrate-v2": "tsx ./src/migrate-v2.ts",
+    "seed-samples": "tsx ./src/seed-samples.ts",
+    "seed-main": "tsx ./src/seed-main.ts",
+    "typecheck": "tsc -p tsconfig.json --noEmit"
+  },
+  "dependencies": {
+    "@types/bcrypt": "^6.0.0",
+    "bcrypt": "^6.0.0",
+    "pg": "^8.20.0"
+  },
+  "devDependencies": {
+    "@types/node": "catalog:",
+    "@types/pg": "^8.11.0",
+    "tsx": "catalog:"
+  }
+}

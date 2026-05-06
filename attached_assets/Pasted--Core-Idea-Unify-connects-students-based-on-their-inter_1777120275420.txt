@@ -1,0 +1,139 @@
+🧠 Core Idea
+
+Unify connects students based on their interests, skills, and goals, helping them:
+
+find like-minded peers
+connect with seniors
+collaborate on projects and hackathons
+improve communication skills
+share resources
+participate in communities
+🏗️ Tech Stack Requirements
+
+Use:
+
+Frontend: HTML, CSS, JavaScript (modern UI, responsive design)
+Backend: Python Flask
+Database: Firebase (Authentication + Firestore)
+AI Integration: Simple chatbot using API (for guidance & moderation)
+Hosting: Localhost (for demo)
+👤 User System
+
+Implement authentication:
+
+Sign up / Login (Firebase Auth)
+Username-based profiles (no real names required)
+
+User profile should include:
+
+username
+interests (multi-select)
+skills
+communities joined
+coins earned
+
+Include 3 roles:
+
+User (student)
+Admin (moderation access)
+Test (for development)
+🎯 Core Features
+1. Interest-Based Onboarding
+Ask users to select interests during signup
+Use this for recommendations
+2. Recommendation System
+Suggest:
+users
+communities
+Based on shared interests
+3. Social System
+Follow / connect system (like Instagram)
+View other profiles
+4. Community System
+Create and join communities
+Each community has:
+posts
+discussions
+members
+5. Hackathon / Team Finder
+Users can post:
+“Looking for frontend developer”
+Others can respond
+6. Study Material Sharing
+Upload and download:
+notes
+PDFs
+resources
+7. Communication Practice Room
+Users can:
+upload videos
+receive feedback from others
+Limit:
+3 free uploads
+after that → coins required
+8. Credit Coin System
+Earn coins by:
+giving feedback
+helping others
+posting useful content
+Spend coins on:
+extra uploads
+profile customization
+9. Leaderboards
+Each community has leaderboard
+Rank users based on:
+activity
+coins
+10. Marketplace
+
+Two sections:
+
+Product selling:
+handmade items
+Skill hiring:
+video editing
+graphic design
+11. Self-Improvement Section
+Provide content for:
+communication
+productivity
+confidence
+12. Moderation System
+Users can report others
+Admin panel:
+view reports
+ban/remove users
+13. Anonymous Complaint Portal
+Users can submit complaints anonymously
+AI checks for:
+vulgar language
+abusive content
+14. AI Chatbot (Genie Assistant)
+Helps users:
+navigate platform
+find communities
+get learning guidance
+🎨 UI/UX Requirements
+Clean, modern UI
+Dark theme preferred
+Dashboard-based layout
+Sections:
+Home
+Communities
+Marketplace
+Practice Room
+Profile
+⚙️ Additional Requirements
+Modular code structure
+Use REST APIs
+Store all data in Firebase
+Ensure responsive design (mobile + desktop)
+🎯 Goal
+
+The final product should be a fully functional prototype of a campus platform that combines:
+
+social networking
+skill development
+collaboration
+gamification
+safety

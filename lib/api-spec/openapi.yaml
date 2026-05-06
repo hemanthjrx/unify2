@@ -1,0 +1,1581 @@
+openapi: 3.1.0
+info:
+  # Do not change the title, if the title changes, the import paths will be broken
+  title: Api
+  version: 0.1.0
+  description: Unify - Student Networking and Collaboration Platform API
+servers:
+  - url: /api
+    description: Base API path
+tags:
+  - name: health
+    description: Health operations
+  - name: profile
+    description: User profile operations
+  - name: onboarding
+    description: Onboarding flow
+  - name: dashboard
+    description: Dashboard summary endpoints
+  - name: discover
+    description: People and community discovery
+  - name: communities
+    description: Community operations
+  - name: connections
+    description: Follow / connect operations
+  - name: feed
+    description: Activity feed
+  - name: posts
+    description: Posts and likes
+  - name: users
+    description: Public user profiles
+  - name: notifications
+    description: Notification operations
+  - name: search
+    description: Search operations
+  - name: marketplace
+    description: Student marketplace for buying and selling products
+  - name: freelance
+    description: Student freelance services
+paths:
+  /healthz:
+    get:
+      operationId: healthCheck
+      tags: [health]
+      summary: Health check
+      responses:
+        "200":
+          description: Healthy
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HealthStatus"
+
+  /me:
+    get:
+      operationId: getMyProfile
+      tags: [profile]
+      summary: Get the authenticated user's profile (creates one on first call)
+      responses:
+        "200":
+          description: Profile
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MyProfile"
+    patch:
+      operationId: updateMyProfile
+      tags: [profile]
+      summary: Update the authenticated user's profile
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateProfileBody"
+      responses:
+        "200":
+          description: Updated profile
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MyProfile"
+
+  /me/onboarding:
+    post:
+      operationId: completeOnboarding
+      tags: [onboarding]
+      summary: Submit onboarding answers (username, interests, skills, bio)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/OnboardingBody"
+      responses:
+        "200":
+          description: Updated profile
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MyProfile"
+
+  /interests:
+    get:
+      operationId: listInterests
+      tags: [onboarding]
+      summary: List all available interests for selection
+      responses:
+        "200":
+          description: Interests
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/InterestList"
+
+  /dashboard/summary:
+    get:
+      operationId: getDashboardSummary
+      tags: [dashboard]
+      summary: Aggregated stats for the dashboard
+      responses:
+        "200":
+          description: Summary
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DashboardSummary"
+
+  /discover/people:
+    get:
+      operationId: discoverPeople
+      tags: [discover]
+      summary: Recommended people based on shared interests
+      responses:
+        "200":
+          description: People
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PublicProfileList"
+
+  /discover/communities:
+    get:
+      operationId: discoverCommunities
+      tags: [discover]
+      summary: Recommended communities based on interests
+      responses:
+        "200":
+          description: Communities
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CommunityList"
+
+  /communities:
+    get:
+      operationId: listCommunities
+      tags: [communities]
+      summary: List all communities
+      responses:
+        "200":
+          description: Communities
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CommunityList"
+
+  /communities/{slug}:
+    get:
+      operationId: getCommunityDetail
+      tags: [communities]
+      summary: Get a community detail by slug (with members)
+      parameters:
+        - name: slug
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Community detail
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CommunityDetail"
+
+  /communities/{id}/join:
+    post:
+      operationId: joinCommunity
+      tags: [communities]
+      summary: Join a community
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Joined
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Community"
+
+  /communities/{id}/leave:
+    post:
+      operationId: leaveCommunity
+      tags: [communities]
+      summary: Leave a community
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Left
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Community"
+
+  /me/followers:
+    get:
+      operationId: getMyFollowers
+      tags: [connections]
+      summary: Get list of users who follow me
+      responses:
+        "200":
+          description: Followers list
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/FollowerList"
+
+  /connections/{username}/remove-follower:
+    post:
+      operationId: removeFollower
+      tags: [connections]
+      summary: Remove a user from my followers
+      parameters:
+        - name: username
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Removed
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ok:
+                    type: boolean
+                required: [ok]
+
+  /me/activity:
+    get:
+      operationId: getMyActivity
+      tags: [profile]
+      summary: Get my own activity history for coin tracking
+      responses:
+        "200":
+          description: Activity list
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MyActivityList"
+
+  /connections/{username}/follow:
+    post:
+      operationId: followUser
+      tags: [connections]
+      summary: Follow another user
+      parameters:
+        - name: username
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Followed
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PublicProfile"
+
+  /connections/{username}/unfollow:
+    post:
+      operationId: unfollowUser
+      tags: [connections]
+      summary: Unfollow a user
+      parameters:
+        - name: username
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Unfollowed
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PublicProfile"
+
+  /users/{username}:
+    get:
+      operationId: getUserProfile
+      tags: [users]
+      summary: Get public profile for a user by username
+      parameters:
+        - name: username
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Public profile
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserProfile"
+        "404":
+          description: Not found
+
+  /feed/activity:
+    get:
+      operationId: getActivityFeed
+      tags: [feed]
+      summary: Recent activity across the platform
+      responses:
+        "200":
+          description: Activity
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ActivityList"
+
+  /posts/feed:
+    get:
+      operationId: getPostsFeed
+      tags: [posts]
+      summary: Posts from people I follow + communities I'm in + my own
+      responses:
+        "200":
+          description: Posts
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PostList"
+
+  /posts/community/{slug}:
+    get:
+      operationId: getCommunityPosts
+      tags: [posts]
+      summary: Posts in a community
+      parameters:
+        - name: slug
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Posts
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PostList"
+
+  /posts/user/{username}:
+    get:
+      operationId: getUserPosts
+      tags: [posts]
+      summary: Posts authored by a specific user
+      parameters:
+        - name: username
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Posts
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PostList"
+
+  /posts:
+    post:
+      operationId: createPost
+      tags: [posts]
+      summary: Create a new post (optionally in a community)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreatePostBody"
+      responses:
+        "200":
+          description: Created post
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Post"
+
+  /posts/{id}:
+    delete:
+      operationId: deletePost
+      tags: [posts]
+      summary: Delete a post you authored
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Deleted
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ok:
+                    type: boolean
+                required: [ok]
+
+  /posts/{id}/like:
+    post:
+      operationId: likePost
+      tags: [posts]
+      summary: Like a post
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Updated post
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Post"
+    delete:
+      operationId: unlikePost
+      tags: [posts]
+      summary: Unlike a post
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Updated post
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Post"
+
+  /notifications:
+    get:
+      operationId: getNotifications
+      tags: [notifications]
+      summary: Get notifications for the current user
+      responses:
+        "200":
+          description: Notifications
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/NotificationList"
+
+  /notifications/read-all:
+    post:
+      operationId: markAllNotificationsRead
+      tags: [notifications]
+      summary: Mark all notifications as read
+      responses:
+        "200":
+          description: Done
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ok:
+                    type: boolean
+                required: [ok]
+
+  /search:
+    get:
+      operationId: search
+      tags: [search]
+      summary: Search users and communities by query
+      parameters:
+        - name: q
+          in: query
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Results
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SearchResults"
+
+  /students:
+    get:
+      operationId: listStudents
+      tags: [search]
+      summary: List students by branch and year
+      parameters:
+        - name: branch
+          in: query
+          required: false
+          schema:
+            type: string
+        - name: studyYear
+          in: query
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 4
+      responses:
+        "200":
+          description: List of students
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StudentList"
+
+  /marketplace/products:
+    get:
+      operationId: listProducts
+      tags: [marketplace]
+      summary: List all marketplace products
+      responses:
+        "200":
+          description: Products
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ProductList"
+    post:
+      operationId: createProduct
+      tags: [marketplace]
+      summary: Create a new product listing
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateProductBody"
+      responses:
+        "200":
+          description: Created product
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Product"
+
+  /marketplace/products/{id}:
+    get:
+      operationId: getProduct
+      tags: [marketplace]
+      summary: Get a product by id
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Product
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Product"
+        "404":
+          description: Not found
+    patch:
+      operationId: updateProduct
+      tags: [marketplace]
+      summary: Update a product listing you own
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateProductBody"
+      responses:
+        "200":
+          description: Updated product
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Product"
+    delete:
+      operationId: deleteProduct
+      tags: [marketplace]
+      summary: Delete a product listing you own
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Deleted
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ok:
+                    type: boolean
+                required: [ok]
+
+  /marketplace/products/{id}/reviews:
+    get:
+      operationId: listProductReviews
+      tags: [marketplace]
+      summary: List reviews for a product
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Reviews
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ReviewList"
+    post:
+      operationId: createProductReview
+      tags: [marketplace]
+      summary: Add a review to a product
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateReviewBody"
+      responses:
+        "200":
+          description: Review
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Review"
+
+  /freelance/services:
+    get:
+      operationId: listServices
+      tags: [freelance]
+      summary: List all freelance services
+      parameters:
+        - name: category
+          in: query
+          required: false
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Services
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ServiceList"
+    post:
+      operationId: createService
+      tags: [freelance]
+      summary: Create a new freelance service listing
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateServiceBody"
+      responses:
+        "200":
+          description: Created service
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Service"
+
+  /freelance/services/{id}:
+    get:
+      operationId: getService
+      tags: [freelance]
+      summary: Get a freelance service by id
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Service
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Service"
+        "404":
+          description: Not found
+    patch:
+      operationId: updateService
+      tags: [freelance]
+      summary: Update a service you own
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateServiceBody"
+      responses:
+        "200":
+          description: Updated service
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Service"
+    delete:
+      operationId: deleteService
+      tags: [freelance]
+      summary: Delete a service you own
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Deleted
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ok:
+                    type: boolean
+                required: [ok]
+
+  /freelance/services/{id}/reviews:
+    get:
+      operationId: listServiceReviews
+      tags: [freelance]
+      summary: List reviews for a service
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Reviews
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ReviewList"
+    post:
+      operationId: createServiceReview
+      tags: [freelance]
+      summary: Add a review to a service
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateReviewBody"
+      responses:
+        "200":
+          description: Review
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Review"
+
+components:
+  schemas:
+    HealthStatus:
+      type: object
+      properties:
+        status:
+          type: string
+      required:
+        - status
+
+    Interest:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        category:
+          type: string
+        emoji:
+          type: ["string", "null"]
+      required: [id, name, category]
+
+    InterestList:
+      type: array
+      items:
+        $ref: "#/components/schemas/Interest"
+
+    MyProfile:
+      type: object
+      properties:
+        id:
+          type: integer
+        username:
+          type: ["string", "null"]
+        bio:
+          type: ["string", "null"]
+        role:
+          type: string
+          enum: [user, admin, moderator, test]
+        coins:
+          type: integer
+        avatarColor:
+          type: string
+        bannerColor:
+          type: string
+        mobileNumber:
+          type: ["string", "null"]
+        usn:
+          type: ["string", "null"]
+        name:
+          type: ["string", "null"]
+        email:
+          type: ["string", "null"]
+        semester:
+          type: ["string", "null"]
+        branch:
+          type: ["string", "null"]
+        yearEnrolled:
+          type: ["string", "null"]
+        portfolioUrl:
+          type: ["string", "null"]
+        linkedinUrl:
+          type: ["string", "null"]
+        onboardingComplete:
+          type: boolean
+        interests:
+          type: array
+          items:
+            $ref: "#/components/schemas/Interest"
+        skills:
+          type: array
+          items:
+            type: string
+        communityCount:
+          type: integer
+        followerCount:
+          type: integer
+        followingCount:
+          type: integer
+      required:
+        - id
+        - role
+        - coins
+        - avatarColor
+        - bannerColor
+        - onboardingComplete
+        - interests
+        - skills
+        - communityCount
+        - followerCount
+        - followingCount
+
+    PublicProfile:
+      type: object
+      properties:
+        id:
+          type: integer
+        username:
+          type: string
+        bio:
+          type: ["string", "null"]
+        avatarColor:
+          type: string
+        coins:
+          type: integer
+        sharedInterests:
+          type: array
+          items:
+            type: string
+        skills:
+          type: array
+          items:
+            type: string
+        isFollowing:
+          type: boolean
+      required:
+        - id
+        - username
+        - avatarColor
+        - coins
+        - sharedInterests
+        - skills
+        - isFollowing
+
+    PublicProfileList:
+      type: array
+      items:
+        $ref: "#/components/schemas/PublicProfile"
+
+    UserProfile:
+      type: object
+      properties:
+        id:
+          type: integer
+        username:
+          type: string
+        bio:
+          type: ["string", "null"]
+        avatarColor:
+          type: string
+        coins:
+          type: integer
+        skills:
+          type: array
+          items:
+            type: string
+        interests:
+          type: array
+          items:
+            type: string
+        followerCount:
+          type: integer
+        followingCount:
+          type: integer
+        communityCount:
+          type: integer
+        isFollowing:
+          type: boolean
+      required:
+        - id
+        - username
+        - avatarColor
+        - coins
+        - skills
+        - interests
+        - followerCount
+        - followingCount
+        - communityCount
+        - isFollowing
+
+    Community:
+      type: object
+      properties:
+        id:
+          type: integer
+        slug:
+          type: string
+        name:
+          type: string
+        description:
+          type: string
+        memberCount:
+          type: integer
+        accentColor:
+          type: string
+        tags:
+          type: array
+          items:
+            type: string
+        isMember:
+          type: boolean
+      required:
+        - id
+        - slug
+        - name
+        - description
+        - memberCount
+        - accentColor
+        - tags
+        - isMember
+
+    CommunityList:
+      type: array
+      items:
+        $ref: "#/components/schemas/Community"
+
+    CommunityMember:
+      type: object
+      properties:
+        id:
+          type: integer
+        username:
+          type: string
+        avatarColor:
+          type: string
+        bio:
+          type: ["string", "null"]
+        joinedAt:
+          type: string
+          format: date-time
+      required: [id, username, avatarColor, joinedAt]
+
+    CommunityDetail:
+      allOf:
+        - $ref: "#/components/schemas/Community"
+        - type: object
+          properties:
+            members:
+              type: array
+              items:
+                $ref: "#/components/schemas/CommunityMember"
+          required: [members]
+
+    FollowerEntry:
+      type: object
+      properties:
+        id:
+          type: integer
+        username:
+          type: string
+        avatarColor:
+          type: string
+        followedAt:
+          type: string
+          format: date-time
+      required: [id, username, avatarColor, followedAt]
+
+    FollowerList:
+      type: array
+      items:
+        $ref: "#/components/schemas/FollowerEntry"
+
+    MyActivityEntry:
+      type: object
+      properties:
+        id:
+          type: integer
+        kind:
+          type: string
+        message:
+          type: string
+        coinsDelta:
+          type: integer
+        createdAt:
+          type: string
+          format: date-time
+      required: [id, kind, message, coinsDelta, createdAt]
+
+    MyActivityList:
+      type: array
+      items:
+        $ref: "#/components/schemas/MyActivityEntry"
+
+    DashboardSummary:
+      type: object
+      properties:
+        coins:
+          type: integer
+        coinDelta:
+          type: integer
+        communityCount:
+          type: integer
+        followerCount:
+          type: integer
+        followingCount:
+          type: integer
+        practiceUploadsRemaining:
+          type: integer
+        weeklyPoints:
+          type: integer
+        myRank:
+          type: integer
+        topInterests:
+          type: array
+          items:
+            type: string
+        leaderboard:
+          type: array
+          items:
+            $ref: "#/components/schemas/LeaderboardEntry"
+      required:
+        - coins
+        - coinDelta
+        - communityCount
+        - followerCount
+        - followingCount
+        - practiceUploadsRemaining
+        - weeklyPoints
+        - topInterests
+        - leaderboard
+
+    LeaderboardEntry:
+      type: object
+      properties:
+        username:
+          type: string
+        avatarColor:
+          type: string
+        coins:
+          type: integer
+        rank:
+          type: integer
+        isYou:
+          type: boolean
+      required: [username, avatarColor, coins, rank, isYou]
+
+    Activity:
+      type: object
+      properties:
+        id:
+          type: integer
+        kind:
+          type: string
+          enum: [community_join, community_post, follow, post, hackathon, resource, badge]
+        actorUsername:
+          type: string
+        actorAvatarColor:
+          type: string
+        message:
+          type: string
+        targetName:
+          type: ["string", "null"]
+        createdAt:
+          type: string
+          format: date-time
+      required: [id, kind, actorUsername, actorAvatarColor, message, createdAt]
+
+    ActivityList:
+      type: array
+      items:
+        $ref: "#/components/schemas/Activity"
+
+    UpdateProfileBody:
+      type: object
+      properties:
+        username:
+          type: string
+        bio:
+          type: string
+        skills:
+          type: array
+          items:
+            type: string
+        interestIds:
+          type: array
+          items:
+            type: integer
+        avatarColor:
+          type: string
+        bannerColor:
+          type: string
+        mobileNumber:
+          type: string
+        usn:
+          type: string
+        name:
+          type: string
+        semester:
+          type: string
+        branch:
+          type: string
+        yearEnrolled:
+          type: string
+        portfolioUrl:
+          type: string
+        linkedinUrl:
+          type: string
+
+    OnboardingBody:
+      type: object
+      properties:
+        username:
+          type: string
+          minLength: 3
+          maxLength: 24
+        bio:
+          type: string
+        skills:
+          type: array
+          items:
+            type: string
+        interestIds:
+          type: array
+          items:
+            type: integer
+      required: [username, interestIds]
+
+    PostAuthor:
+      type: object
+      properties:
+        id:
+          type: integer
+        username:
+          type: string
+        avatarColor:
+          type: string
+        bio:
+          type: ["string", "null"]
+      required: [id, username, avatarColor]
+
+    PostCommunity:
+      type: object
+      properties:
+        id:
+          type: integer
+        slug:
+          type: string
+        name:
+          type: string
+        accentColor:
+          type: string
+      required: [id, slug, name, accentColor]
+
+    Post:
+      type: object
+      properties:
+        id:
+          type: integer
+        body:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+        author:
+          $ref: "#/components/schemas/PostAuthor"
+        community:
+          oneOf:
+            - $ref: "#/components/schemas/PostCommunity"
+            - type: "null"
+        likeCount:
+          type: integer
+        isLiked:
+          type: boolean
+      required: [id, body, createdAt, author, community, likeCount, isLiked]
+
+    PostList:
+      type: array
+      items:
+        $ref: "#/components/schemas/Post"
+
+    CreatePostBody:
+      type: object
+      properties:
+        body:
+          type: string
+          minLength: 1
+          maxLength: 600
+        communitySlug:
+          type: ["string", "null"]
+      required: [body]
+
+    Notification:
+      type: object
+      properties:
+        id:
+          type: integer
+        type:
+          type: string
+          enum: [follow, like]
+        read:
+          type: boolean
+        createdAt:
+          type: string
+          format: date-time
+        actor:
+          type: object
+          properties:
+            username:
+              type: string
+            avatarColor:
+              type: string
+          required: [username, avatarColor]
+        post:
+          oneOf:
+            - type: object
+              properties:
+                id:
+                  type: integer
+                body:
+                  type: string
+              required: [id, body]
+            - type: "null"
+      required: [id, type, read, createdAt, actor, post]
+
+    NotificationList:
+      type: array
+      items:
+        $ref: "#/components/schemas/Notification"
+
+    SearchResultUser:
+      type: object
+      properties:
+        id:
+          type: integer
+        username:
+          type: string
+        bio:
+          type: ["string", "null"]
+        avatarColor:
+          type: string
+        coins:
+          type: integer
+        isFollowing:
+          type: boolean
+      required: [id, username, avatarColor, coins, isFollowing]
+
+    SearchResultCommunity:
+      type: object
+      properties:
+        id:
+          type: integer
+        slug:
+          type: string
+        name:
+          type: string
+        description:
+          type: string
+        memberCount:
+          type: integer
+        accentColor:
+          type: string
+        isMember:
+          type: boolean
+      required: [id, slug, name, description, memberCount, accentColor, isMember]
+
+    SearchResults:
+      type: object
+      properties:
+        users:
+          type: array
+          items:
+            $ref: "#/components/schemas/SearchResultUser"
+        communities:
+          type: array
+          items:
+            $ref: "#/components/schemas/SearchResultCommunity"
+      required: [users, communities]
+
+    StudentList:
+      type: array
+      items:
+        $ref: "#/components/schemas/StudentListItem"
+
+    StudentListItem:
+      type: object
+      properties:
+        id:
+          type: integer
+        username:
+          type: string
+        bio:
+          type: ["string", "null"]
+        avatarColor:
+          type: string
+        coins:
+          type: integer
+        isFollowing:
+          type: boolean
+      required: [id, username, avatarColor, coins, isFollowing]
+
+    ListingOwner:
+      type: object
+      properties:
+        id:
+          type: integer
+        username:
+          type: string
+        avatarColor:
+          type: string
+      required: [id, username, avatarColor]
+
+    Product:
+      type: object
+      properties:
+        id:
+          type: integer
+        title:
+          type: string
+        description:
+          type: string
+        price:
+          type: string
+        images:
+          type: array
+          items:
+            type: string
+        category:
+          type: string
+        contactInfo:
+          type: ["string", "null"]
+        createdAt:
+          type: string
+          format: date-time
+        seller:
+          $ref: "#/components/schemas/ListingOwner"
+        avgRating:
+          type: number
+        reviewCount:
+          type: integer
+        isOwner:
+          type: boolean
+      required: [id, title, description, price, images, category, createdAt, seller, avgRating, reviewCount, isOwner]
+
+    ProductList:
+      type: array
+      items:
+        $ref: "#/components/schemas/Product"
+
+    CreateProductBody:
+      type: object
+      properties:
+        title:
+          type: string
+          minLength: 1
+          maxLength: 120
+        description:
+          type: string
+          minLength: 1
+          maxLength: 2000
+        price:
+          type: number
+          minimum: 0
+        images:
+          type: array
+          items:
+            type: string
+        category:
+          type: string
+        contactInfo:
+          type: string
+      required: [title, description, price]
+
+    Review:
+      type: object
+      properties:
+        id:
+          type: integer
+        rating:
+          type: integer
+          minimum: 1
+          maximum: 5
+        comment:
+          type: ["string", "null"]
+        createdAt:
+          type: string
+          format: date-time
+        reviewer:
+          $ref: "#/components/schemas/ListingOwner"
+      required: [id, rating, createdAt, reviewer]
+
+    ReviewList:
+      type: array
+      items:
+        $ref: "#/components/schemas/Review"
+
+    CreateReviewBody:
+      type: object
+      properties:
+        rating:
+          type: integer
+          minimum: 1
+          maximum: 5
+        comment:
+          type: string
+      required: [rating]
+
+    Service:
+      type: object
+      properties:
+        id:
+          type: integer
+        title:
+          type: string
+        description:
+          type: string
+        price:
+          type: string
+        category:
+          type: string
+        images:
+          type: array
+          items:
+            type: string
+        contactInfo:
+          type: ["string", "null"]
+        deliveryDays:
+          type: integer
+        createdAt:
+          type: string
+          format: date-time
+        provider:
+          $ref: "#/components/schemas/ListingOwner"
+        avgRating:
+          type: number
+        reviewCount:
+          type: integer
+        isOwner:
+          type: boolean
+      required: [id, title, description, price, category, images, deliveryDays, createdAt, provider, avgRating, reviewCount, isOwner]
+
+    ServiceList:
+      type: array
+      items:
+        $ref: "#/components/schemas/Service"
+
+    CreateServiceBody:
+      type: object
+      properties:
+        title:
+          type: string
+          minLength: 1
+          maxLength: 120
+        description:
+          type: string
+          minLength: 1
+          maxLength: 2000
+        price:
+          type: number
+          minimum: 0
+        category:
+          type: string
+        images:
+          type: array
+          items:
+            type: string
+        contactInfo:
+          type: string
+        deliveryDays:
+          type: integer
+          minimum: 1
+          maximum: 365
+      required: [title, description, price, category]
