@@ -149,11 +149,19 @@ router.post("/auth/login", async (req, res) => {
 
   const usnUpper = usn.trim().toUpperCase();
 
-  const [user] = await db
+  let [user] = await db
     .select()
     .from(usersTable)
     .where(eq(usersTable.usn, usnUpper))
     .limit(1);
+
+  if (!user) {
+    [user] = await db
+      .select()
+      .from(usersTable)
+      .where(eq(usersTable.username, usn.trim()))
+      .limit(1);
+  }
 
   if (!user || !user.passwordHash) {
     res.status(401).json({ error: "invalid_credentials", message: "Invalid USN or password." });

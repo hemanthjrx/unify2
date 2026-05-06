@@ -1798,7 +1798,7 @@ function ModeratorsTab() {
   const createMutation = useMutation({
     mutationFn: () =>
       api.post("/admin/moderators", {
-        username: form.username.trim().toLowerCase(),
+        username: form.username.trim().toUpperCase(),
         password: form.password,
         name: form.name.trim() || undefined,
         email: form.email.trim() || undefined,
@@ -1840,10 +1840,10 @@ function ModeratorsTab() {
                 <Label className="text-xs">Username <span className="text-destructive">*</span></Label>
                 <Input
                   value={form.username}
-                  onChange={(e) => setForm((f) => ({ ...f, username: e.target.value.toLowerCase().replace(/[^a-z0-9_]/g, "") }))}
-                  placeholder="mod_username"
+                  onChange={(e) => setForm((f) => ({ ...f, username: e.target.value.toUpperCase().replace(/[^A-Z0-9_]/g, "") }))}
+                  placeholder="MOD_USERNAME"
                 />
-                <p className="text-[10px] text-muted-foreground">Lowercase, letters, numbers, underscores only</p>
+                <p className="text-[10px] text-muted-foreground">Uppercase letters, numbers, underscores only</p>
               </div>
               <div className="space-y-1">
                 <Label className="text-xs">Password <span className="text-destructive">*</span></Label>

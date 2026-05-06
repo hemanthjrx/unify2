@@ -352,7 +352,7 @@ router.get("/admin/moderators", withAdminUser, async (_req, res) => {
 
 router.post("/admin/moderators", withAdminUser, async (req, res) => {
   const body = z.object({
-    username: z.string().min(3).max(30).regex(/^[a-z0-9_]+$/),
+    username: z.string().min(3).max(30).regex(/^[A-Z0-9_]+$/),
     password: z.string().min(6).max(100),
     name: z.string().min(1).max(80).optional(),
     email: z.string().email().optional(),
