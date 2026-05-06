@@ -155,6 +155,14 @@ router.post("/mentorship/:id/replies", withCurrentUser, async (req, res) => {
     .values({ questionId, authorId: req.currentUserId!, content: parsed.data.content })
     .returning();
 
+  // Award +3 coins to the replier (if not replying to own question)
+  if (q.authorId !== req.currentUserId!) {
+    await db
+      .update(usersTable)
+      .set({ coins: sql`${usersTable.coins} + 3` })
+      .where(eq(usersTable.id, req.currentUserId!));
+  }
+
   res.status(201).json({ id: created.id });
 });
 
@@ -183,11 +191,11 @@ router.post("/mentorship/:id/replies/:replyId/helpful", withCurrentUser, async (
   await db.update(mentorshipRepliesTable).set({ isHelpful: true }).where(eq(mentorshipRepliesTable.id, replyId));
   // Mark question as solved
   await db.update(mentorshipQuestionsTable).set({ isSolved: true }).where(eq(mentorshipQuestionsTable.id, questionId));
-  // Award 5 coins to the replier (but not if they replied to their own question)
+  // Award +2 bonus coins to the replier for being marked helpful (if not own question)
   if (reply.authorId !== req.currentUserId!) {
     await db
       .update(usersTable)
-      .set({ coins: sql`${usersTable.coins} + 5` })
+      .set({ coins: sql`${usersTable.coins} + 2` })
       .where(eq(usersTable.id, reply.authorId));
   }
 

@@ -41,8 +41,8 @@ For nested/wildcard routes (e.g. Clerk's `<SignIn routing="path">`), use `path="
 
 ## Unify domain notes
 
-- DB schema: `users`, `interests`, `user_interests`, `communities` (+bannerImageUrl, +profileImageUrl, +leaderId), `community_members`, `follows`, `activity`, `posts`, `post_likes`, `notifications`, `messages`, `reports`.
-- Coin rewards: +5 on community join, +5 on hackathon post, +2 per regular post.
+- DB schema: `users`, `interests`, `user_interests`, `communities` (+bannerImageUrl, +profileImageUrl, +leaderId), `community_members`, `follows`, `activity`, `posts` (+hackathon new fields), `post_likes`, `notifications`, `messages`, `reports`, `warning_strikes`.
+- Coin rewards: +5 on community join, +5 on hackathon post, +2 per regular post, +3 per mentorship reply, +2 bonus when reply marked helpful.
 - Dashboard practice upload limit: 5.
 - Seeded: 26 interests, 35 communities (4 categories), 50 students (45 approved, 5 pending), 5 posts/section.
 - Frontend uses generated hooks from `@workspace/api-client-react` (orval). Direct fetch calls use `useAuthenticatedFetch` from `src/lib/api-fetch.ts`.
@@ -58,9 +58,9 @@ For nested/wildcard routes (e.g. Clerk's `<SignIn routing="path">`), use `path="
 - `/search` — search users + communities
 - `/marketplace` — buy/sell items
 - `/freelance` — freelance listings
-- `/hackathons` — post hackathon invites (date, location, team size, skills), like, delete own
+- `/hackathons` — post hackathon invites (date, location, team size, skills, college, fee, problem statement, registration/location links), search bar, like, delete own
 - `/messages`, `/messages/:username` — DM split-panel with 3-message pending limit, file attachments
-- `/admin` — admin panel (admin role: all tabs; moderator role: Applications + Reports only)
+- `/admin` — admin panel (admin role: all tabs; moderator role: Applications + Reports only). Warning strikes system: up to 5 strikes, 5th auto-bans. WarningBanModal (warn + ban sections). Community leader search by name/USN. Admin/Mod panel link shown at TOP of sidebar.
 
 ### Private Accounts & Follow Requests
 - `users.is_private` (default `true`) — if private, following creates a `pending` follow request + `follow_request` notification
@@ -70,7 +70,7 @@ For nested/wildcard routes (e.g. Clerk's `<SignIn routing="path">`), use `path="
 - Profile page shows private lock screen if `isPrivate && followStatus !== 'accepted'`
 
 ### Messaging Rules
-- Pending follow → max 3 messages from sender, then frozen until accepted
+- Pending follow → max 3 messages from sender, then frozen until accepted. Recipient sees "Continue Conversation" button to accept.
 - Accepted follow → unlimited messages
 - File types: images (.jpg/.jpeg/.png/.gif/.webp), PDFs (.pdf), documents (.doc/.docx). No audio/video.
 - File upload: `POST /api/messages/upload` (multer), files served at `/api/uploads/:filename`

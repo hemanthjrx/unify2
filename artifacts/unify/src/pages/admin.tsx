@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useGetMyProfile } from "@workspace/api-client-react";
 import { useAuthenticatedFetch } from "@/lib/api-fetch";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -171,52 +171,148 @@ const BAN_OPTIONS = [
   { value: "permanent", label: "Permanently" },
 ];
 
-function BanDurationModal({
+type WarningStrike = {
+  id: number;
+  description: string;
+  screenshotUrl: string | null;
+  createdAt: string;
+  issuedByUsername: string | null;
+};
+
+function WarningBanModal({
+  userId,
   username,
-  onConfirm,
+  onWarnSuccess,
+  onBanConfirm,
   onCancel,
 }: {
+  userId: number;
   username: string;
-  onConfirm: (duration: string) => void;
+  onWarnSuccess: (result: { totalWarnings: number; autoBanned: boolean }) => void;
+  onBanConfirm: (duration: string) => void;
   onCancel: () => void;
 }) {
-  const [selected, setSelected] = useState("manual");
+  const api = useAdminFetch();
+  const [banDuration, setBanDuration] = useState("manual");
+  const [warnDesc, setWarnDesc] = useState("");
+  const [warnUrl, setWarnUrl] = useState("");
+  const [submitting, setSubmitting] = useState(false);
+  const [warnings, setWarnings] = useState<WarningStrike[]>([]);
+  const [warnLoading, setWarnLoading] = useState(true);
+
+  useEffect(() => {
+    api.get(`/admin/users/${userId}/warnings`).then((d) => { setWarnings(d); setWarnLoading(false); }).catch(() => setWarnLoading(false));
+  }, [userId]);
+
+  async function submitWarning() {
+    if (!warnDesc.trim() || submitting) return;
+    setSubmitting(true);
+    try {
+      const result = await api.post(`/admin/users/${userId}/warnings`, {
+        description: warnDesc.trim(),
+        screenshotUrl: warnUrl.trim() || null,
+      });
+      onWarnSuccess(result);
+    } catch {
+      setSubmitting(false);
+    }
+  }
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
-      <div className="bg-card border border-card-border rounded-xl shadow-2xl w-full max-w-sm p-6 space-y-4">
+      <div className="bg-card border border-card-border rounded-xl shadow-2xl w-full max-w-md p-6 space-y-5 max-h-[90vh] overflow-y-auto">
         <div className="flex items-start justify-between gap-2">
           <div>
             <div className="font-bold text-base flex items-center gap-2">
-              <Ban className="w-4 h-4 text-destructive" /> Ban @{username}
+              <AlertTriangle className="w-4 h-4 text-yellow-400" /> Actions for @{username}
             </div>
-            <div className="text-xs text-muted-foreground mt-0.5">Select how long to ban this student</div>
+            <div className="text-xs text-muted-foreground mt-0.5">Issue a warning or ban this student</div>
           </div>
           <button onClick={onCancel}><X className="w-4 h-4 text-muted-foreground" /></button>
         </div>
-        <div className="grid grid-cols-2 gap-2">
-          {BAN_OPTIONS.map((opt) => (
-            <button
-              key={opt.value}
-              onClick={() => setSelected(opt.value)}
-              className={`flex items-center gap-2 px-3 py-2.5 rounded-lg border text-sm font-medium transition-colors ${
-                selected === opt.value
-                  ? "border-destructive bg-destructive/10 text-destructive"
-                  : "border-border text-muted-foreground hover:border-border hover:text-foreground"
-              }`}
-            >
-              <Clock className="w-3.5 h-3.5 flex-shrink-0" />
-              {opt.label}
-            </button>
-          ))}
-        </div>
-        <div className="flex gap-2 pt-1">
-          <Button variant="ghost" size="sm" className="flex-1" onClick={onCancel}>
-            Cancel
+
+        {/* Section 1: Give Warning */}
+        <div className="space-y-3 border border-yellow-500/20 rounded-xl p-4 bg-yellow-500/5">
+          <div className="flex items-center justify-between">
+            <div className="font-semibold text-sm flex items-center gap-2 text-yellow-400">
+              <AlertTriangle className="w-3.5 h-3.5" /> Give Warning Strike
+            </div>
+            <div className="text-xs text-muted-foreground">
+              {warnLoading ? "…" : `${warnings.length}/5 strikes`}
+            </div>
+          </div>
+          {!warnLoading && warnings.length > 0 && (
+            <div className="space-y-1.5 max-h-28 overflow-y-auto">
+              {warnings.map((w, i) => (
+                <div key={w.id} className="text-xs bg-secondary/60 border border-border rounded-lg px-2.5 py-1.5">
+                  <div className="flex items-center justify-between gap-2 mb-0.5">
+                    <span className="font-medium text-yellow-400">Strike {warnings.length - i}</span>
+                    <span className="text-muted-foreground">{new Date(w.createdAt).toLocaleDateString()}</span>
+                  </div>
+                  <p className="text-foreground/80 leading-snug">{w.description}</p>
+                  {w.screenshotUrl && (
+                    <a href={w.screenshotUrl} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline flex items-center gap-1 mt-0.5">
+                      <ExternalLink className="w-2.5 h-2.5" /> View evidence
+                    </a>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
+          <Textarea
+            placeholder="Describe the reason for this warning…"
+            value={warnDesc}
+            onChange={(e) => setWarnDesc(e.target.value)}
+            rows={2}
+            className="resize-none text-sm"
+          />
+          <Input
+            placeholder="Screenshot / evidence URL (optional)"
+            value={warnUrl}
+            onChange={(e) => setWarnUrl(e.target.value)}
+            className="text-sm"
+          />
+          <Button
+            size="sm"
+            className="w-full gap-2 bg-yellow-500/20 text-yellow-300 hover:bg-yellow-500/30 border border-yellow-500/30"
+            variant="outline"
+            disabled={!warnDesc.trim() || submitting}
+            onClick={submitWarning}
+          >
+            <AlertTriangle className="w-3.5 h-3.5" />
+            {submitting ? "Issuing…" : `Issue Warning Strike (${warnings.length + 1}/5)`}
           </Button>
-          <Button variant="destructive" size="sm" className="flex-1" onClick={() => onConfirm(selected)}>
-            Ban Student
+        </div>
+
+        {/* Section 2: Ban */}
+        <div className="space-y-3 border border-destructive/20 rounded-xl p-4 bg-destructive/5">
+          <div className="font-semibold text-sm flex items-center gap-2 text-destructive">
+            <Ban className="w-3.5 h-3.5" /> Ban Student
+          </div>
+          <div className="grid grid-cols-2 gap-2">
+            {BAN_OPTIONS.map((opt) => (
+              <button
+                key={opt.value}
+                onClick={() => setBanDuration(opt.value)}
+                className={`flex items-center gap-2 px-3 py-2.5 rounded-lg border text-sm font-medium transition-colors ${
+                  banDuration === opt.value
+                    ? "border-destructive bg-destructive/10 text-destructive"
+                    : "border-border text-muted-foreground hover:border-border hover:text-foreground"
+                }`}
+              >
+                <Clock className="w-3.5 h-3.5 flex-shrink-0" />
+                {opt.label}
+              </button>
+            ))}
+          </div>
+          <Button variant="destructive" size="sm" className="w-full" onClick={() => onBanConfirm(banDuration)}>
+            <Ban className="w-3.5 h-3.5 mr-1.5" /> Ban Student
           </Button>
         </div>
+
+        <Button variant="ghost" size="sm" className="w-full" onClick={onCancel}>
+          Cancel
+        </Button>
       </div>
     </div>
   );
@@ -341,14 +437,14 @@ function UsersTab({ onSelectUser }: { onSelectUser: (u: AdminUserDetail) => void
     queryFn: () => api.get("/admin/users"),
   });
 
-  const [banTarget, setBanTarget] = useState<AdminUser | null>(null);
+  const [actionTarget, setActionTarget] = useState<AdminUser | null>(null);
 
   const banMutation = useMutation({
     mutationFn: ({ id, isBanned, banDuration }: { id: number; isBanned: boolean; banDuration?: string }) =>
       api.patch(`/admin/users/${id}`, { isBanned, ...(banDuration ? { banDuration } : {}) }),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["admin", "users"] });
-      setBanTarget(null);
+      setActionTarget(null);
     },
   });
 
@@ -370,11 +466,17 @@ function UsersTab({ onSelectUser }: { onSelectUser: (u: AdminUserDetail) => void
 
   return (
     <div className="space-y-4">
-      {banTarget && (
-        <BanDurationModal
-          username={banTarget.username ?? "unknown"}
-          onConfirm={(duration) => banMutation.mutate({ id: banTarget.id, isBanned: true, banDuration: duration })}
-          onCancel={() => setBanTarget(null)}
+      {actionTarget && (
+        <WarningBanModal
+          userId={actionTarget.id}
+          username={actionTarget.username ?? "unknown"}
+          onWarnSuccess={({ autoBanned }) => {
+            qc.invalidateQueries({ queryKey: ["admin", "users"] });
+            if (autoBanned) setActionTarget(null);
+            else setActionTarget(null);
+          }}
+          onBanConfirm={(duration) => banMutation.mutate({ id: actionTarget.id, isBanned: true, banDuration: duration })}
+          onCancel={() => setActionTarget(null)}
         />
       )}
       <Input
@@ -476,9 +578,9 @@ function UsersTab({ onSelectUser }: { onSelectUser: (u: AdminUserDetail) => void
                         size="sm"
                         variant="destructive"
                         className="h-7 px-2 text-xs"
-                        onClick={() => setBanTarget(u)}
+                        onClick={() => setActionTarget(u)}
                       >
-                        <Ban className="w-3 h-3 mr-1" /> Ban
+                        <AlertTriangle className="w-3 h-3 mr-1" /> Warn/Ban
                       </Button>
                     )}
                   </div>
@@ -498,14 +600,19 @@ function UsersTab({ onSelectUser }: { onSelectUser: (u: AdminUserDetail) => void
 function UserDetailView({ user, onBack }: { user: AdminUserDetail; onBack: () => void }) {
   const api = useAdminFetch();
   const qc = useQueryClient();
-  const [showBanModal, setShowBanModal] = useState(false);
+  const [showActionModal, setShowActionModal] = useState(false);
+
+  const { data: freshWarnings, refetch: refetchWarnings } = useQuery<WarningStrike[]>({
+    queryKey: ["admin", "user-warnings", user.id],
+    queryFn: () => api.get(`/admin/users/${user.id}/warnings`),
+  });
 
   const banMutation = useMutation({
     mutationFn: ({ isBanned, banDuration }: { isBanned: boolean; banDuration?: string }) =>
       api.patch(`/admin/users/${user.id}`, { isBanned, ...(banDuration ? { banDuration } : {}) }),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["admin", "users"] });
-      setShowBanModal(false);
+      setShowActionModal(false);
       onBack();
     },
   });
@@ -523,11 +630,16 @@ function UserDetailView({ user, onBack }: { user: AdminUserDetail; onBack: () =>
 
   return (
     <div className="p-8 max-w-4xl mx-auto space-y-6">
-      {showBanModal && (
-        <BanDurationModal
+      {showActionModal && (
+        <WarningBanModal
+          userId={user.id}
           username={user.username ?? "unknown"}
-          onConfirm={(duration) => banMutation.mutate({ isBanned: true, banDuration: duration })}
-          onCancel={() => setShowBanModal(false)}
+          onWarnSuccess={() => {
+            refetchWarnings();
+            setShowActionModal(false);
+          }}
+          onBanConfirm={(duration) => banMutation.mutate({ isBanned: true, banDuration: duration })}
+          onCancel={() => setShowActionModal(false)}
         />
       )}
       <button
@@ -577,25 +689,30 @@ function UserDetailView({ user, onBack }: { user: AdminUserDetail; onBack: () =>
                 <div className="text-sm text-muted-foreground">{user.bio || "No bio"}</div>
               </div>
             </div>
-            {user.isBanned ? (
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => banMutation.mutate({ isBanned: false })}
-                disabled={banMutation.isPending}
-              >
-                <CheckCircle className="w-4 h-4 mr-1.5" /> Unban student
-              </Button>
-            ) : (
-              <Button
-                variant="destructive"
-                size="sm"
-                onClick={() => setShowBanModal(true)}
-                disabled={banMutation.isPending}
-              >
-                <Ban className="w-4 h-4 mr-1.5" /> Ban student
-              </Button>
-            )}
+            <div className="flex items-center gap-2">
+              {user.isBanned ? (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => banMutation.mutate({ isBanned: false })}
+                  disabled={banMutation.isPending}
+                >
+                  <CheckCircle className="w-4 h-4 mr-1.5" /> Unban student
+                </Button>
+              ) : (
+                <>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="border-yellow-500/40 text-yellow-400 hover:bg-yellow-500/10"
+                    onClick={() => setShowActionModal(true)}
+                    disabled={banMutation.isPending}
+                  >
+                    <AlertTriangle className="w-4 h-4 mr-1.5" /> Warn / Ban
+                  </Button>
+                </>
+              )}
+            </div>
           </div>
         </CardContent>
       </Card>
@@ -634,6 +751,45 @@ function UserDetailView({ user, onBack }: { user: AdminUserDetail; onBack: () =>
           </CardContent>
         </Card>
       </div>
+
+      {/* Warning Strikes */}
+      <Card className="bg-card border-card-border">
+        <CardHeader className="pb-3">
+          <CardTitle className="text-sm font-semibold flex items-center gap-2">
+            <AlertTriangle className="w-4 h-4 text-yellow-400" />
+            Warning Strikes ({freshWarnings?.length ?? 0} / 5)
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          {!freshWarnings ? (
+            <div className="text-sm text-muted-foreground">Loading…</div>
+          ) : freshWarnings.length === 0 ? (
+            <div className="text-sm text-muted-foreground">No warnings issued yet.</div>
+          ) : (
+            <div className="space-y-2">
+              {freshWarnings.map((w, i) => (
+                <div key={w.id} className="flex items-start gap-3 py-2.5 px-3 rounded-lg bg-yellow-500/5 border border-yellow-500/20">
+                  <span className="w-6 h-6 rounded-full bg-yellow-500/20 text-yellow-400 text-xs font-bold flex items-center justify-center flex-shrink-0 mt-0.5">
+                    {freshWarnings.length - i}
+                  </span>
+                  <div className="flex-1 min-w-0">
+                    <div className="text-sm leading-snug">{w.description}</div>
+                    <div className="text-xs text-muted-foreground mt-0.5 flex items-center gap-2">
+                      {w.issuedByUsername && <span>by @{w.issuedByUsername}</span>}
+                      <span>{new Date(w.createdAt).toLocaleDateString()}</span>
+                    </div>
+                    {w.screenshotUrl && (
+                      <a href={w.screenshotUrl} target="_blank" rel="noopener noreferrer" className="text-xs text-primary hover:underline flex items-center gap-1 mt-0.5">
+                        <ExternalLink className="w-2.5 h-2.5" /> View evidence
+                      </a>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </CardContent>
+      </Card>
 
       {/* Activity */}
       <Card className="bg-card border-card-border">
@@ -761,12 +917,39 @@ function CommunityEditPanel({ community, onClose }: { community: Community; onCl
     bannerImageUrl: community.bannerImageUrl ?? null as string | null,
     profileImageUrl: community.profileImageUrl ?? null as string | null,
     leaderId: community.leaderId ?? null as number | null,
+    leaderUsername: community.leaderUsername ?? null as string | null,
   });
+  const [leaderSearch, setLeaderSearch] = useState(community.leaderUsername ?? "");
+  const [leaderResults, setLeaderResults] = useState<{ id: number; username: string; usn: string | null; name: string | null; avatarColor: string }[]>([]);
+  const [leaderDropdown, setLeaderDropdown] = useState(false);
 
   const { data: members = [], isLoading: membersLoading } = useQuery<CommunityMember[]>({
     queryKey: ["admin", "community-members", community.id],
     queryFn: () => api.get(`/admin/communities/${community.id}/members`),
   });
+
+  async function searchLeader(q: string) {
+    setLeaderSearch(q);
+    if (!q.trim()) { setLeaderResults([]); setLeaderDropdown(false); return; }
+    try {
+      const results = await api.get(`/admin/users/search?q=${encodeURIComponent(q.trim())}`);
+      setLeaderResults(results);
+      setLeaderDropdown(true);
+    } catch { setLeaderResults([]); }
+  }
+
+  function selectLeader(u: { id: number; username: string }) {
+    setForm((f) => ({ ...f, leaderId: u.id, leaderUsername: u.username }));
+    setLeaderSearch(u.username);
+    setLeaderDropdown(false);
+  }
+
+  function clearLeader() {
+    setForm((f) => ({ ...f, leaderId: null, leaderUsername: null }));
+    setLeaderSearch("");
+    setLeaderResults([]);
+    setLeaderDropdown(false);
+  }
 
   const updateMutation = useMutation({
     mutationFn: () =>
@@ -822,16 +1005,53 @@ function CommunityEditPanel({ community, onClose }: { community: Community; onCl
           </div>
           <div className="space-y-1">
             <Label className="text-xs">Community Leader</Label>
-            <select
-              value={form.leaderId ?? ""}
-              onChange={(e) => setForm((f) => ({ ...f, leaderId: e.target.value ? Number(e.target.value) : null }))}
-              className="w-full h-9 rounded-md border border-input bg-background px-3 text-sm"
-            >
-              <option value="">— No leader assigned —</option>
-              {members.map((m) => (
-                <option key={m.id} value={m.id}>@{m.username}</option>
-              ))}
-            </select>
+            <div className="relative">
+              <div className="flex gap-2">
+                <div className="relative flex-1">
+                  <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
+                  <Input
+                    placeholder="Search by name, username or USN…"
+                    value={leaderSearch}
+                    onChange={(e) => searchLeader(e.target.value)}
+                    onFocus={() => leaderResults.length > 0 && setLeaderDropdown(true)}
+                    className="pl-8 text-sm h-9"
+                  />
+                </div>
+                {form.leaderId && (
+                  <Button type="button" variant="ghost" size="sm" className="h-9 px-2 text-muted-foreground hover:text-destructive" onClick={clearLeader}>
+                    <X className="w-4 h-4" />
+                  </Button>
+                )}
+              </div>
+              {leaderDropdown && leaderResults.length > 0 && (
+                <div className="absolute z-20 mt-1 w-full rounded-lg border border-border bg-card shadow-xl overflow-hidden">
+                  {leaderResults.map((u) => (
+                    <button
+                      key={u.id}
+                      type="button"
+                      onClick={() => selectLeader(u)}
+                      className="w-full flex items-center gap-2.5 px-3 py-2 hover:bg-secondary/60 transition-colors text-left"
+                    >
+                      <Avatar className="w-6 h-6 flex-shrink-0">
+                        <AvatarFallback style={{ backgroundColor: u.avatarColor }} className="text-white text-[10px] font-bold">
+                          {u.username[0]?.toUpperCase()}
+                        </AvatarFallback>
+                      </Avatar>
+                      <div className="min-w-0">
+                        <div className="text-sm font-medium truncate">@{u.username}</div>
+                        {u.usn && <div className="text-xs text-muted-foreground">{u.usn}</div>}
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+            {form.leaderId && (
+              <p className="text-xs text-emerald-400">✓ Leader set to @{form.leaderUsername}</p>
+            )}
+            {!form.leaderId && (
+              <p className="text-xs text-muted-foreground">No leader assigned. Search to assign one.</p>
+            )}
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1">

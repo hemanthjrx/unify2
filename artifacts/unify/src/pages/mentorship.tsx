@@ -146,7 +146,7 @@ function QuestionList() {
             <GraduationCap className="w-6 h-6 text-primary" /> Mentorship
           </h1>
           <p className="text-sm text-muted-foreground mt-1">
-            Ask questions, get answers from peers. Mark helpful replies to reward them 5 coins.
+            Ask questions, get answers from peers. Earn +3 coins per reply, +2 bonus when marked helpful.
           </p>
         </div>
         <Button onClick={() => setShowForm(true)} className="gap-2">
@@ -454,7 +454,7 @@ function QuestionDetail({ id }: { id: number }) {
                     </div>
                     {reply.isHelpful ? (
                       <Badge className="bg-emerald-500/20 text-emerald-400 border-emerald-500/30 gap-1 text-xs">
-                        <ThumbsUp className="w-3 h-3" /> Helpful · +5 coins
+                        <ThumbsUp className="w-3 h-3" /> Helpful · +2 coins
                       </Badge>
                     ) : (
                       detail.isOwn && !detail.isSolved && !reply.isOwn && (
@@ -465,7 +465,7 @@ function QuestionDetail({ id }: { id: number }) {
                           onClick={() => markHelpful(reply.id)}
                           disabled={markingId === reply.id}
                         >
-                          <ThumbsUp className="w-3 h-3" /> Mark Helpful
+                          <ThumbsUp className="w-3 h-3" /> Found it Helpful
                         </Button>
                       )
                     )}
@@ -502,7 +502,7 @@ function QuestionDetail({ id }: { id: number }) {
             />
             <div className="flex items-center justify-between">
               <p className="text-xs text-muted-foreground">
-                If the question author marks your reply as helpful, you earn 5 coins!
+                You earn +3 coins for replying. If marked helpful, you earn +2 more!
               </p>
               <Button
                 onClick={submitReply}

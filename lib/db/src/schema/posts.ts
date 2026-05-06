@@ -28,6 +28,11 @@ export const postsTable = pgTable(
     hackathonTeamSize: integer("hackathon_team_size"),
     hackathonSkills: text("hackathon_skills").array().default([]),
     hackathonFilled: boolean("hackathon_filled").notNull().default(false),
+    hackathonCollegeName: text("hackathon_college_name"),
+    hackathonRegistrationFee: text("hackathon_registration_fee"),
+    hackathonProblemStatement: text("hackathon_problem_statement"),
+    hackathonRegistrationLink: text("hackathon_registration_link"),
+    hackathonLocationLink: text("hackathon_location_link"),
     images: text("images").array().notNull().default([]),
     createdAt: timestamp("created_at", { withTimezone: true })
       .notNull()

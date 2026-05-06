@@ -8,8 +8,9 @@ import {
   marketplaceProductsTable,
   freelanceServicesTable,
   reportsTable,
+  warningStrikesTable,
 } from "@workspace/db";
-import { desc, eq, ilike, or, sql } from "drizzle-orm";
+import { desc, eq, ilike, or, sql, and } from "drizzle-orm";
 import { withAdminUser, withModeratorOrAdmin } from "../lib/auth";
 import { z } from "zod";
 import bcrypt from "bcrypt";
@@ -59,6 +60,20 @@ router.get("/admin/users", withAdminUser, async (req, res) => {
 
   const users = await query;
   res.json(users);
+});
+
+router.get("/admin/users/search", withAdminUser, async (req, res) => {
+  const q = String(req.query.q || "").trim();
+  if (!q) { res.json([]); return; }
+  const rows = await db
+    .select({ id: usersTable.id, username: usersTable.username, usn: usersTable.usn, avatarColor: usersTable.avatarColor, name: usersTable.name })
+    .from(usersTable)
+    .where(and(
+      eq(usersTable.role, "student"),
+      or(ilike(usersTable.username, `%${q}%`), ilike(usersTable.usn, `%${q}%`), ilike(usersTable.name, `%${q}%`)),
+    ))
+    .limit(10);
+  res.json(rows);
 });
 
 router.get("/admin/users/:userId", withAdminUser, async (req, res) => {
@@ -548,6 +563,54 @@ router.delete("/admin/freelance/:id", withAdminUser, async (req, res) => {
   const id = Number(req.params.id);
   await db.delete(freelanceServicesTable).where(eq(freelanceServicesTable.id, id));
   res.status(204).send();
+});
+
+router.get("/admin/users/:userId/warnings", withModeratorOrAdmin, async (req, res) => {
+  const userId = Number(req.params.userId);
+  const issuerAlias = db.select({ id: usersTable.id, username: usersTable.username }).from(usersTable).as("issuer");
+  const rows = await db
+    .select({
+      id: warningStrikesTable.id,
+      description: warningStrikesTable.description,
+      screenshotUrl: warningStrikesTable.screenshotUrl,
+      createdAt: warningStrikesTable.createdAt,
+      issuedByUsername: issuerAlias.username,
+    })
+    .from(warningStrikesTable)
+    .leftJoin(issuerAlias, eq(issuerAlias.id, warningStrikesTable.issuedById))
+    .where(eq(warningStrikesTable.userId, userId))
+    .orderBy(desc(warningStrikesTable.createdAt));
+  res.json(rows.map((r) => ({ ...r, createdAt: r.createdAt.toISOString() })));
+});
+
+router.post("/admin/users/:userId/warnings", withModeratorOrAdmin, async (req, res) => {
+  const userId = Number(req.params.userId);
+  const issuedById = req.currentUserId!;
+  const body = z.object({
+    description: z.string().min(3).max(1000),
+    screenshotUrl: z.string().url().optional().nullable(),
+  }).parse(req.body);
+
+  const [user] = await db.select({ id: usersTable.id, isBanned: usersTable.isBanned }).from(usersTable).where(eq(usersTable.id, userId)).limit(1);
+  if (!user) { res.status(404).json({ error: "not_found" }); return; }
+  if (user.isBanned) { res.status(409).json({ error: "already_banned" }); return; }
+
+  await db.insert(warningStrikesTable).values({ userId, issuedById, description: body.description, screenshotUrl: body.screenshotUrl ?? null });
+
+  const [{ count }] = await db
+    .select({ count: sql<number>`count(*)::int` })
+    .from(warningStrikesTable)
+    .where(eq(warningStrikesTable.userId, userId));
+
+  let autoBanned = false;
+  if (Number(count) >= 5) {
+    await db.update(usersTable).set({ isBanned: true }).where(eq(usersTable.id, userId));
+    autoBanned = true;
+  }
+
+  await db.insert(activityTable).values({ actorId: issuedById, kind: "warning_issued", message: `Issued warning strike #${count} to user #${userId}` });
+
+  res.json({ ok: true, totalWarnings: Number(count), autoBanned });
 });
 
 export default router;

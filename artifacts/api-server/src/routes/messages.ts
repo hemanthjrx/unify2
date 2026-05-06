@@ -214,4 +214,20 @@ router.post("/messages/conversations/:username", withCurrentUser, async (req, re
   });
 });
 
+// Accept conversation — recipient accepts sender's pending follow to unlock chat
+router.post("/messages/conversations/:username/accept", withCurrentUser, async (req, res) => {
+  const me = req.currentUserId!;
+  const [other] = await db.select({ id: usersTable.id }).from(usersTable).where(eq(usersTable.username, String(req.params.username))).limit(1);
+  if (!other) { res.status(404).json({ error: "not_found" }); return; }
+
+  const [updated] = await db
+    .update(followsTable)
+    .set({ status: "accepted" })
+    .where(and(eq(followsTable.followerId, other.id), eq(followsTable.followeeId, me)))
+    .returning();
+
+  if (!updated) { res.status(404).json({ error: "no_pending_follow" }); return; }
+  res.json({ ok: true });
+});
+
 export default router;

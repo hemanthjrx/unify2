@@ -66,6 +66,7 @@ export function SidebarLayout({ children }: { children: React.ReactNode }) {
   ];
 
   const isAdmin = profile?.role === "admin";
+  const isModerator = profile?.role === "moderator";
 
   const initial =
     profile?.username?.[0]?.toUpperCase() ||
@@ -91,6 +92,21 @@ export function SidebarLayout({ children }: { children: React.ReactNode }) {
         </div>
 
         <nav className="flex-1 p-3 space-y-0.5 overflow-y-auto">
+          {(isAdmin || isModerator) && (
+            <Link
+              href="/admin"
+              className={`flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors text-sm mb-1 ${
+                location.startsWith("/admin")
+                  ? "bg-sidebar-accent text-sidebar-accent-foreground font-medium"
+                  : "text-sidebar-foreground/70 hover:bg-sidebar-accent/60 hover:text-sidebar-foreground"
+              }`}
+              data-testid="link-sidebar-admin"
+            >
+              <Shield className="w-4 h-4 shrink-0" style={{ color: "#fb923c" }} />
+              {isAdmin ? "Admin Panel" : "Moderator Panel"}
+            </Link>
+          )}
+
           {navItems.map((item) => {
             const isActive = item.match(location);
             const Icon = item.icon;
@@ -162,20 +178,6 @@ export function SidebarLayout({ children }: { children: React.ReactNode }) {
             )}
           </Link>
 
-          {isAdmin && (
-            <Link
-              href="/admin"
-              className={`flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors text-sm ${
-                location.startsWith("/admin")
-                  ? "bg-sidebar-accent text-sidebar-accent-foreground font-medium"
-                  : "text-sidebar-foreground/70 hover:bg-sidebar-accent/60 hover:text-sidebar-foreground"
-              }`}
-              data-testid="link-sidebar-admin"
-            >
-              <Shield className="w-4 h-4 shrink-0" style={{ color: "#fb923c" }} />
-              Admin Panel
-            </Link>
-          )}
         </nav>
 
         <div className="p-3 border-t border-sidebar-border space-y-3">
@@ -201,7 +203,7 @@ export function SidebarLayout({ children }: { children: React.ReactNode }) {
                   {profile?.username || profile?.name || "Student"}
                 </span>
                 <span className="text-[11px] text-muted-foreground leading-tight truncate">
-                  {profile?.role === "admin" ? "Admin" : "Student"}
+                  {profile?.role === "admin" ? "Admin" : profile?.role === "moderator" ? "Moderator" : "Student"}
                 </span>
               </div>
             </div>

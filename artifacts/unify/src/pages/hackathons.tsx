@@ -10,6 +10,7 @@ import { useToast } from "@/hooks/use-toast";
 import { formatDistanceToNow } from "date-fns";
 import {
   Zap, MapPin, Users, Calendar, Plus, X, Trash2, Heart, Tag, MessageCircle,
+  Search, DollarSign, Link as LinkIcon, BookOpen, School,
 } from "lucide-react";
 import { PhotoUploader, photosToObjectPaths, objectPathsToPhotos, type UploadedPhoto } from "@/components/PhotoUploader";
 import { ReportButton } from "@/components/ReportModal";
@@ -24,6 +25,11 @@ interface HackathonPost {
   hackathonTeamSize: number | null;
   hackathonSkills: string[];
   hackathonFilled: boolean;
+  hackathonCollegeName: string | null;
+  hackathonRegistrationFee: string | null;
+  hackathonProblemStatement: string | null;
+  hackathonRegistrationLink: string | null;
+  hackathonLocationLink: string | null;
   images: string[];
   createdAt: string;
   author: { id: number; username: string; avatarColor: string };
@@ -41,6 +47,7 @@ export default function HackathonsPage() {
   const [showComposer, setShowComposer] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [activeTab, setActiveTab] = useState<"all" | "mine">("all");
+  const [search, setSearch] = useState("");
 
   const [form, setForm] = useState({
     body: "",
@@ -49,6 +56,11 @@ export default function HackathonsPage() {
     hackathonTeamSize: "",
     skillInput: "",
     hackathonSkills: [] as string[],
+    hackathonCollegeName: "",
+    hackathonRegistrationFee: "",
+    hackathonProblemStatement: "",
+    hackathonRegistrationLink: "",
+    hackathonLocationLink: "",
   });
   const [photos, setPhotos] = useState<UploadedPhoto[]>([]);
 
@@ -88,13 +100,18 @@ export default function HackathonsPage() {
           hackathonLocation: form.hackathonLocation.trim() || undefined,
           hackathonTeamSize: form.hackathonTeamSize ? Number(form.hackathonTeamSize) : undefined,
           hackathonSkills: form.hackathonSkills,
+          hackathonCollegeName: form.hackathonCollegeName.trim() || undefined,
+          hackathonRegistrationFee: form.hackathonRegistrationFee.trim() || undefined,
+          hackathonProblemStatement: form.hackathonProblemStatement.trim() || undefined,
+          hackathonRegistrationLink: form.hackathonRegistrationLink.trim() || undefined,
+          hackathonLocationLink: form.hackathonLocationLink.trim() || undefined,
           images: photosToObjectPaths(photos),
         }),
       });
       if (!r.ok) throw new Error();
       const newPost = await r.json();
       setPosts((p) => [newPost, ...p]);
-      setForm({ body: "", hackathonDate: "", hackathonLocation: "", hackathonTeamSize: "", skillInput: "", hackathonSkills: [] });
+      setForm({ body: "", hackathonDate: "", hackathonLocation: "", hackathonTeamSize: "", skillInput: "", hackathonSkills: [], hackathonCollegeName: "", hackathonRegistrationFee: "", hackathonProblemStatement: "", hackathonRegistrationLink: "", hackathonLocationLink: "" });
       setPhotos([]);
       setShowComposer(false);
       toast({ title: "Hackathon invite posted!" });
@@ -147,6 +164,22 @@ export default function HackathonsPage() {
             Post Invite
           </Button>
         </div>
+      </div>
+
+      {/* Search bar */}
+      <div className="relative">
+        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+        <Input
+          placeholder="Search hackathons by description, college, skills…"
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          className="pl-9 bg-secondary border-border"
+        />
+        {search && (
+          <button onClick={() => setSearch("")} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground">
+            <X className="w-3.5 h-3.5" />
+          </button>
+        )}
       </div>
 
       {/* Tabs */}
@@ -202,6 +235,27 @@ export default function HackathonsPage() {
                 </p>
               )}
             </div>
+            <div className="space-y-3">
+              <div>
+                <label className="text-xs text-muted-foreground mb-1 block flex items-center gap-1"><School className="w-3 h-3" /> College / Organizer Name</label>
+                <Input
+                  placeholder="e.g. MIT, IIT Bangalore, ABC College"
+                  value={form.hackathonCollegeName}
+                  onChange={(e) => setForm((f) => ({ ...f, hackathonCollegeName: e.target.value }))}
+                  className="bg-secondary border-border text-sm"
+                />
+              </div>
+              <div>
+                <label className="text-xs text-muted-foreground mb-1 block flex items-center gap-1"><BookOpen className="w-3 h-3" /> Problem Statement</label>
+                <Textarea
+                  placeholder="Describe the problem statement or hackathon theme…"
+                  value={form.hackathonProblemStatement}
+                  onChange={(e) => setForm((f) => ({ ...f, hackathonProblemStatement: e.target.value }))}
+                  rows={2}
+                  className="bg-secondary border-border text-sm resize-none"
+                />
+              </div>
+            </div>
             <div className="grid grid-cols-2 gap-3">
               <div>
                 <label className="text-xs text-muted-foreground mb-1 block">Event Date</label>
@@ -247,6 +301,35 @@ export default function HackathonsPage() {
                 </div>
               </div>
             </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="text-xs text-muted-foreground mb-1 block flex items-center gap-1"><DollarSign className="w-3 h-3" /> Registration Fee</label>
+                <Input
+                  placeholder="e.g. Free, ₹500, $10"
+                  value={form.hackathonRegistrationFee}
+                  onChange={(e) => setForm((f) => ({ ...f, hackathonRegistrationFee: e.target.value }))}
+                  className="bg-secondary border-border text-sm"
+                />
+              </div>
+              <div>
+                <label className="text-xs text-muted-foreground mb-1 block flex items-center gap-1"><LinkIcon className="w-3 h-3" /> Registration Link</label>
+                <Input
+                  placeholder="https://devpost.com/…"
+                  value={form.hackathonRegistrationLink}
+                  onChange={(e) => setForm((f) => ({ ...f, hackathonRegistrationLink: e.target.value }))}
+                  className="bg-secondary border-border text-sm"
+                />
+              </div>
+            </div>
+            <div>
+              <label className="text-xs text-muted-foreground mb-1 block flex items-center gap-1"><MapPin className="w-3 h-3" /> Google Maps / Location Link</label>
+              <Input
+                placeholder="https://maps.google.com/…"
+                value={form.hackathonLocationLink}
+                onChange={(e) => setForm((f) => ({ ...f, hackathonLocationLink: e.target.value }))}
+                className="bg-secondary border-border text-sm"
+              />
+            </div>
             {form.hackathonSkills.length > 0 && (
               <div className="flex flex-wrap gap-2">
                 {form.hackathonSkills.map((s) => (
@@ -279,7 +362,19 @@ export default function HackathonsPage() {
       )}
 
       {!loading && (() => {
-        const visible = activeTab === "mine" ? posts.filter((p) => p.isOwner) : posts;
+        const base = activeTab === "mine" ? posts.filter((p) => p.isOwner) : posts;
+        const visible = base.filter((p) => {
+          if (!search.trim()) return true;
+          const s = search.toLowerCase();
+          return (
+            p.body.toLowerCase().includes(s) ||
+            p.hackathonCollegeName?.toLowerCase().includes(s) ||
+            p.hackathonLocation?.toLowerCase().includes(s) ||
+            p.hackathonSkills.some((sk) => sk.toLowerCase().includes(s)) ||
+            p.hackathonProblemStatement?.toLowerCase().includes(s) ||
+            p.author.username.toLowerCase().includes(s)
+          );
+        });
         if (visible.length === 0) return (
           <div className="flex flex-col items-center justify-center py-20 gap-4 text-center">
             <div className="w-16 h-16 rounded-full bg-secondary flex items-center justify-center">
@@ -287,24 +382,37 @@ export default function HackathonsPage() {
             </div>
             <div>
               <p className="font-semibold">
-                {activeTab === "mine" ? "You haven't posted any invites yet" : "No hackathon invites yet"}
+                {search ? "No hackathons match your search" : activeTab === "mine" ? "You haven't posted any invites yet" : "No hackathon invites yet"}
               </p>
               <p className="text-sm text-muted-foreground mt-1">
-                {activeTab === "mine"
+                {search ? "Try a different keyword." : activeTab === "mine"
                   ? "Post your first hackathon invite and find teammates!"
                   : "Be the first to post a hackathon invite and find teammates!"}
               </p>
             </div>
-            <Button onClick={() => setShowComposer(true)} className="gap-2">
-              <Plus className="w-4 h-4" /> Post Invite
-            </Button>
+            {!search && (
+              <Button onClick={() => setShowComposer(true)} className="gap-2">
+                <Plus className="w-4 h-4" /> Post Invite
+              </Button>
+            )}
           </div>
         );
         return null;
       })()}
 
       <div className="space-y-4">
-        {(activeTab === "mine" ? posts.filter((p) => p.isOwner) : posts).map((post) => (
+        {(activeTab === "mine" ? posts.filter((p) => p.isOwner) : posts).filter((p) => {
+          if (!search.trim()) return true;
+          const s = search.toLowerCase();
+          return (
+            p.body.toLowerCase().includes(s) ||
+            p.hackathonCollegeName?.toLowerCase().includes(s) ||
+            p.hackathonLocation?.toLowerCase().includes(s) ||
+            p.hackathonSkills.some((sk) => sk.toLowerCase().includes(s)) ||
+            p.hackathonProblemStatement?.toLowerCase().includes(s) ||
+            p.author.username.toLowerCase().includes(s)
+          );
+        }).map((post) => (
           <Card key={post.id} className="bg-card border-card-border hover:border-primary/30 transition-colors">
             <CardContent className="p-5 space-y-4">
               {/* Author row */}
@@ -373,6 +481,21 @@ export default function HackathonsPage() {
                 </div>
               )}
 
+              {/* College / organizer */}
+              {post.hackathonCollegeName && (
+                <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                  <School className="w-3.5 h-3.5 text-violet-400 flex-shrink-0" />
+                  <span className="font-medium text-foreground/80">{post.hackathonCollegeName}</span>
+                </div>
+              )}
+
+              {/* Problem statement */}
+              {post.hackathonProblemStatement && (
+                <div className="text-xs text-muted-foreground bg-secondary/60 border border-border rounded-lg px-3 py-2 leading-relaxed">
+                  <span className="font-semibold text-foreground/70">Problem: </span>{post.hackathonProblemStatement}
+                </div>
+              )}
+
               {/* Meta chips */}
               <div className="flex flex-wrap gap-3">
                 {post.hackathonDate && (
@@ -381,10 +504,23 @@ export default function HackathonsPage() {
                     {new Date(post.hackathonDate).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })}
                   </div>
                 )}
+                {post.hackathonRegistrationFee && (
+                  <div className="flex items-center gap-1.5 text-xs text-muted-foreground bg-secondary px-3 py-1.5 rounded-lg border border-border">
+                    <DollarSign className="w-3.5 h-3.5 text-yellow-400" />
+                    {post.hackathonRegistrationFee}
+                  </div>
+                )}
                 {post.hackathonLocation && (
                   <div className="flex items-center gap-1.5 text-xs text-muted-foreground bg-secondary px-3 py-1.5 rounded-lg border border-border">
-                    <MapPin className="w-3.5 h-3.5 text-rose-400" />
-                    {post.hackathonLocation}
+                    {post.hackathonLocationLink ? (
+                      <a href={post.hackathonLocationLink} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1.5 hover:text-foreground transition-colors">
+                        <MapPin className="w-3.5 h-3.5 text-rose-400" />
+                        {post.hackathonLocation}
+                        <LinkIcon className="w-2.5 h-2.5" />
+                      </a>
+                    ) : (
+                      <><MapPin className="w-3.5 h-3.5 text-rose-400" />{post.hackathonLocation}</>
+                    )}
                   </div>
                 )}
                 {post.hackathonTeamSize && (
@@ -392,6 +528,17 @@ export default function HackathonsPage() {
                     <Users className="w-3.5 h-3.5 text-emerald-400" />
                     {post.hackathonTeamSize} members needed
                   </div>
+                )}
+                {post.hackathonRegistrationLink && (
+                  <a
+                    href={post.hackathonRegistrationLink}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center gap-1.5 text-xs text-primary bg-primary/10 px-3 py-1.5 rounded-lg border border-primary/20 hover:bg-primary/20 transition-colors"
+                  >
+                    <LinkIcon className="w-3.5 h-3.5" />
+                    Register
+                  </a>
                 )}
               </div>
 

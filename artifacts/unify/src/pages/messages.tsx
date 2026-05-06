@@ -141,6 +141,16 @@ export default function MessagesPage() {
   }
 
   const isFrozen = convData?.isFrozen ?? false;
+  const hasIncomingMessages = convData ? convData.messages.some((m) => !m.isMine) : false;
+
+  async function acceptConversation() {
+    if (!activeUsername) return;
+    const r = await afetch(`${BASE}/api/messages/conversations/${activeUsername}/accept`, { method: "POST" });
+    if (r.ok) {
+      setConvData((d) => d ? { ...d, isAccepted: true } : d);
+      loadConversations();
+    }
+  }
   const remaining = convData ? Math.max(0, convData.maxPendingMessages - convData.pendingMsgCount) : 0;
 
   return (
@@ -254,7 +264,7 @@ export default function MessagesPage() {
             <div ref={bottomRef} />
           </div>
 
-          {/* Frozen state */}
+          {/* Frozen state — shown to SENDER when they hit the 3-message limit */}
           {isFrozen && (
             <div className="mx-4 mb-3 flex items-center gap-3 px-4 py-3 rounded-xl bg-yellow-500/10 border border-yellow-500/20">
               <Lock className="w-4 h-4 text-yellow-400 flex-shrink-0" />
@@ -264,7 +274,20 @@ export default function MessagesPage() {
             </div>
           )}
 
-          {!isFrozen && convData && !convData.isAccepted && (
+          {/* Continue Conversation — shown to RECIPIENT when they have pending messages from the other person */}
+          {!isFrozen && convData && !convData.isAccepted && hasIncomingMessages && (
+            <div className="mx-4 mb-3 flex items-center justify-between gap-3 px-4 py-3 rounded-xl bg-primary/10 border border-primary/20">
+              <div className="flex items-center gap-2 text-xs text-foreground/80 leading-relaxed">
+                <Lock className="w-4 h-4 text-primary flex-shrink-0" />
+                <span><span className="font-semibold">@{activeUsername}</span> sent you a message. Accept to start chatting.</span>
+              </div>
+              <Button size="sm" className="flex-shrink-0 h-7 text-xs gap-1.5" onClick={acceptConversation}>
+                Continue Conversation
+              </Button>
+            </div>
+          )}
+
+          {!isFrozen && convData && !convData.isAccepted && !hasIncomingMessages && (
             <div className="mx-4 mb-2 text-center text-xs text-muted-foreground">
               {remaining} of {convData.maxPendingMessages} messages remaining while follow request is pending
             </div>
