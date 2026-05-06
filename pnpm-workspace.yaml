@@ -36,7 +36,9 @@ minimumReleaseAgeExclude:
   - stripe-replit-sync
 
 onlyBuiltDependencies:
+  - '@clerk/shared'
   - '@swc/core'
+  - bcrypt
   - esbuild
   - msw
   - unrs-resolver
