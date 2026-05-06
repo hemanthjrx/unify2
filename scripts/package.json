@@ -9,6 +9,7 @@
     "migrate-v2": "tsx ./src/migrate-v2.ts",
     "seed-samples": "tsx ./src/seed-samples.ts",
     "seed-main": "tsx ./src/seed-main.ts",
+    "create-admin-users": "tsx ./src/create-admin-users.ts",
     "typecheck": "tsc -p tsconfig.json --noEmit"
   },
   "dependencies": {
