@@ -39,6 +39,10 @@ import {
   Upload,
   Eye,
   EyeOff,
+  Tag,
+  ZoomIn,
+  ZoomOut,
+  Layers,
 } from "lucide-react";
 
 const BASE = import.meta.env.BASE_URL.replace(/\/$/, "");
@@ -127,7 +131,7 @@ type FreelanceItem = {
   providerUsername: string | null;
 };
 
-type Tab = "users" | "communities" | "marketplace" | "freelance" | "applications" | "reports" | "moderators";
+type Tab = "users" | "communities" | "marketplace" | "freelance" | "applications" | "reports" | "moderators" | "categories";
 
 type Application = {
   id: number;
@@ -384,6 +388,7 @@ export default function AdminPage() {
     { id: "communities" as const, label: "Communities", icon: Crown, adminOnly: true },
     { id: "marketplace" as const, label: "Marketplace", icon: ShoppingBag, adminOnly: true },
     { id: "freelance" as const, label: "Freelance", icon: Briefcase, adminOnly: true },
+    { id: "categories" as const, label: "Categories", icon: Tag, adminOnly: true },
     { id: "moderators" as const, label: "Moderators", icon: ShieldCheck, adminOnly: true },
   ];
 
@@ -424,6 +429,7 @@ export default function AdminPage() {
       {tab === "communities" && isAdmin && <CommunitiesTab />}
       {tab === "marketplace" && isAdmin && <MarketplaceTab />}
       {tab === "freelance" && isAdmin && <FreelanceTab />}
+      {tab === "categories" && isAdmin && <CategoriesTab />}
       {tab === "moderators" && isAdmin && <ModeratorsTab />}
     </div>
   );
@@ -1551,7 +1557,8 @@ function ApplicationsTab({ isAdmin }: { isAdmin: boolean }) {
   const [statusFilter, setStatusFilter] = useState<"all" | "pending" | "approved" | "rejected">("pending");
   const [rejectTarget, setRejectTarget] = useState<Application | null>(null);
   const [rejectReason, setRejectReason] = useState("");
-  const [expanded, setExpanded] = useState<number | null>(null);
+  const [docViewer, setDocViewer] = useState<{ url: string; label: string } | null>(null);
+  const [zoom, setZoom] = useState(1);
 
   const { data: applications = [], isLoading, refetch } = useQuery<Application[]>({
     queryKey: ["admin", "applications", statusFilter],
@@ -1597,8 +1604,54 @@ function ApplicationsTab({ isAdmin }: { isAdmin: boolean }) {
 
   if (isLoading) return <div className="text-muted-foreground text-sm">Loading…</div>;
 
+  const isPdf = (url: string) => url.toLowerCase().includes(".pdf") || url.toLowerCase().includes("pdf");
+
   return (
     <div className="space-y-4">
+      {docViewer && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4" onClick={() => { setDocViewer(null); setZoom(1); }}>
+          <div className="bg-card border border-border rounded-2xl shadow-2xl w-full max-w-3xl max-h-[90vh] flex flex-col" onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-center justify-between p-4 border-b border-border shrink-0">
+              <div className="flex items-center gap-2">
+                <FileText className="w-4 h-4 text-primary" />
+                <span className="font-semibold text-sm">{docViewer.label}</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <button onClick={() => setZoom((z) => Math.max(0.5, z - 0.25))} className="p-1.5 rounded-lg hover:bg-secondary transition-colors" title="Zoom out">
+                  <ZoomOut className="w-4 h-4" />
+                </button>
+                <span className="text-xs text-muted-foreground w-10 text-center">{Math.round(zoom * 100)}%</span>
+                <button onClick={() => setZoom((z) => Math.min(3, z + 0.25))} className="p-1.5 rounded-lg hover:bg-secondary transition-colors" title="Zoom in">
+                  <ZoomIn className="w-4 h-4" />
+                </button>
+                <a href={docViewer.url} target="_blank" rel="noopener noreferrer" className="p-1.5 rounded-lg hover:bg-secondary transition-colors text-muted-foreground hover:text-foreground" title="Open in new tab">
+                  <ExternalLink className="w-4 h-4" />
+                </a>
+                <button onClick={() => { setDocViewer(null); setZoom(1); }} className="p-1.5 rounded-lg hover:bg-secondary transition-colors">
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+            </div>
+            <div className="flex-1 overflow-auto p-4 flex items-start justify-center min-h-0">
+              {isPdf(docViewer.url) ? (
+                <iframe
+                  src={docViewer.url}
+                  className="w-full rounded-lg border border-border"
+                  style={{ height: `calc(70vh * ${zoom})`, minHeight: "400px", transform: "none" }}
+                  title={docViewer.label}
+                />
+              ) : (
+                <img
+                  src={docViewer.url}
+                  alt={docViewer.label}
+                  className="rounded-lg border border-border max-w-none shadow-lg"
+                  style={{ width: `${zoom * 100}%`, maxWidth: "none" }}
+                />
+              )}
+            </div>
+          </div>
+        </div>
+      )}
       {rejectTarget && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
           <div className="bg-card border border-border rounded-xl shadow-2xl w-full max-w-sm p-6 space-y-4">
@@ -1715,13 +1768,6 @@ function ApplicationsTab({ isAdmin }: { isAdmin: boolean }) {
               </div>
 
               <div className="flex items-center gap-2 flex-wrap">
-                <button
-                  onClick={() => setExpanded(expanded === app.id ? null : app.id)}
-                  className="flex items-center gap-1.5 text-xs text-primary hover:underline"
-                >
-                  <FileText className="w-3.5 h-3.5" />
-                  {expanded === app.id ? "Hide documents" : "View documents"}
-                </button>
                 {app.accountStatus === "pending" && (
                   <div className="flex gap-2 ml-auto">
                     <Button
@@ -1772,35 +1818,31 @@ function ApplicationsTab({ isAdmin }: { isAdmin: boolean }) {
                 )}
               </div>
 
-              {expanded === app.id && (
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1 border-t border-border/50">
-                  {(
-                    [
-                      { label: "College ID Card", url: storageUrl(app.idCardUrl) },
-                      { label: "Fee Receipt", url: storageUrl(app.feeReceiptUrl) },
-                    ] as { label: string; url: string | null }[]
-                  ).map(({ label, url }) => (
-                    <div key={label} className="space-y-1">
-                      <div className="text-xs font-medium text-muted-foreground">{label}</div>
-                      {url ? (
-                        <a
-                          href={url}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="flex items-center gap-2 px-3 py-2 rounded-lg border border-border bg-secondary/40 hover:bg-secondary/70 transition-colors text-xs text-primary"
-                        >
-                          <ExternalLink className="w-3.5 h-3.5" />
-                          Open document
-                        </a>
-                      ) : (
-                        <div className="px-3 py-2 rounded-lg border border-border bg-secondary/40 text-xs text-muted-foreground">
-                          Not uploaded
-                        </div>
-                      )}
-                    </div>
-                  ))}
-                </div>
-              )}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1 border-t border-border/50">
+                {(
+                  [
+                    { label: "College ID Card", url: storageUrl(app.idCardUrl) },
+                    { label: "Fee Receipt", url: storageUrl(app.feeReceiptUrl) },
+                  ] as { label: string; url: string | null }[]
+                ).map(({ label, url }) => (
+                  <div key={label} className="space-y-1">
+                    <div className="text-xs font-medium text-muted-foreground">{label}</div>
+                    {url ? (
+                      <button
+                        onClick={() => { setZoom(1); setDocViewer({ url, label }); }}
+                        className="flex items-center gap-2 px-3 py-2 rounded-lg border border-border bg-secondary/40 hover:bg-secondary/70 transition-colors text-xs text-primary w-full text-left"
+                      >
+                        <FileText className="w-3.5 h-3.5" />
+                        Open document
+                      </button>
+                    ) : (
+                      <div className="px-3 py-2 rounded-lg border border-border bg-secondary/40 text-xs text-muted-foreground">
+                        Not uploaded
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
             </CardContent>
           </Card>
         ))}
@@ -2165,6 +2207,240 @@ function ModeratorsTab() {
           </div>
         )}
       </div>
+    </div>
+  );
+}
+
+type AdminCategory = { id: number; type: string; name: string; createdAt: string };
+type AdminInterest = { id: number; name: string; category: string; emoji: string | null };
+
+function CategoriesTab() {
+  const api = useAdminFetch();
+  const qc = useQueryClient();
+  const [section, setSection] = useState<"marketplace" | "freelance" | "interests">("marketplace");
+
+  const { data: categories = [], isLoading: catsLoading } = useQuery<AdminCategory[]>({
+    queryKey: ["admin", "categories"],
+    queryFn: () => api.get("/admin/categories"),
+  });
+  const { data: interests = [], isLoading: intsLoading } = useQuery<AdminInterest[]>({
+    queryKey: ["admin", "interests"],
+    queryFn: () => api.get("/admin/interests"),
+  });
+
+  const [newCatName, setNewCatName] = useState("");
+  const [newIntName, setNewIntName] = useState("");
+  const [newIntCat, setNewIntCat] = useState("");
+  const [newIntEmoji, setNewIntEmoji] = useState("");
+  const [editInt, setEditInt] = useState<AdminInterest | null>(null);
+  const [saving, setSaving] = useState(false);
+
+  const marketplaceCats = categories.filter((c) => c.type === "marketplace");
+  const freelanceCats = categories.filter((c) => c.type === "freelance");
+
+  async function addCategory(type: "marketplace" | "freelance") {
+    const name = newCatName.trim();
+    if (!name) return;
+    setSaving(true);
+    try {
+      await api.post("/admin/categories", { type, name });
+      await qc.invalidateQueries({ queryKey: ["admin", "categories"] });
+      setNewCatName("");
+    } finally { setSaving(false); }
+  }
+
+  async function deleteCategory(id: number) {
+    if (!confirm("Delete this category?")) return;
+    await api.del(`/admin/categories/${id}`);
+    await qc.invalidateQueries({ queryKey: ["admin", "categories"] });
+  }
+
+  async function addInterest() {
+    const name = newIntName.trim();
+    const category = newIntCat.trim();
+    if (!name || !category) return;
+    setSaving(true);
+    try {
+      await api.post("/admin/interests", { name, category, emoji: newIntEmoji.trim() || null });
+      await qc.invalidateQueries({ queryKey: ["admin", "interests"] });
+      setNewIntName(""); setNewIntCat(""); setNewIntEmoji("");
+    } finally { setSaving(false); }
+  }
+
+  async function saveInterest() {
+    if (!editInt) return;
+    setSaving(true);
+    try {
+      await api.patch(`/admin/interests/${editInt.id}`, { name: editInt.name, category: editInt.category, emoji: editInt.emoji || null });
+      await qc.invalidateQueries({ queryKey: ["admin", "interests"] });
+      setEditInt(null);
+    } finally { setSaving(false); }
+  }
+
+  async function deleteInterest(id: number) {
+    if (!confirm("Delete this skill/interest? Students using it will lose it from their profile.")) return;
+    await api.del(`/admin/interests/${id}`);
+    await qc.invalidateQueries({ queryKey: ["admin", "interests"] });
+  }
+
+  const sectionTabs = [
+    { id: "marketplace" as const, label: "Marketplace Categories" },
+    { id: "freelance" as const, label: "Freelance Categories" },
+    { id: "interests" as const, label: "Skills & Interests" },
+  ];
+
+  const currentCats = section === "marketplace" ? marketplaceCats : freelanceCats;
+  const intCategories = Array.from(new Set(interests.map((i) => i.category))).sort();
+
+  return (
+    <div className="space-y-5">
+      <div className="flex items-center gap-3">
+        <Layers className="w-5 h-5 text-primary" />
+        <div>
+          <h2 className="text-lg font-bold">Categories & Skills</h2>
+          <p className="text-sm text-muted-foreground">Manage categories for marketplace and freelance, plus all available skills/interests.</p>
+        </div>
+      </div>
+
+      <div className="flex gap-1 p-1 bg-secondary rounded-lg w-fit flex-wrap">
+        {sectionTabs.map((s) => (
+          <button
+            key={s.id}
+            onClick={() => setSection(s.id)}
+            className={`px-4 py-1.5 rounded-md text-xs font-medium transition-colors ${
+              section === s.id ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"
+            }`}
+          >
+            {s.label}
+          </button>
+        ))}
+      </div>
+
+      {(section === "marketplace" || section === "freelance") && (
+        <Card className="bg-card border-card-border">
+          <CardContent className="p-5 space-y-4">
+            <div className="flex items-center gap-2">
+              <Input
+                placeholder={`New ${section} category name…`}
+                value={newCatName}
+                onChange={(e) => setNewCatName(e.target.value)}
+                onKeyDown={(e) => e.key === "Enter" && addCategory(section)}
+                className="flex-1"
+              />
+              <Button disabled={!newCatName.trim() || saving} onClick={() => addCategory(section)} className="gap-1.5 shrink-0">
+                <PlusCircle className="w-4 h-4" /> Add
+              </Button>
+            </div>
+            {catsLoading ? (
+              <div className="text-sm text-muted-foreground">Loading…</div>
+            ) : currentCats.length === 0 ? (
+              <div className="text-sm text-muted-foreground py-6 text-center">No {section} categories yet. Add one above.</div>
+            ) : (
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2">
+                {currentCats.map((cat) => (
+                  <div key={cat.id} className="flex items-center justify-between gap-2 px-3 py-2 rounded-lg bg-secondary/50 border border-border/50 group">
+                    <div className="flex items-center gap-2 min-w-0">
+                      <Tag className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
+                      <span className="text-sm font-medium truncate">{cat.name}</span>
+                    </div>
+                    <button
+                      onClick={() => deleteCategory(cat.id)}
+                      className="shrink-0 p-1 rounded text-muted-foreground hover:text-destructive transition-colors opacity-0 group-hover:opacity-100"
+                      title="Delete category"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      )}
+
+      {section === "interests" && (
+        <div className="space-y-4">
+          <Card className="bg-card border-card-border">
+            <CardContent className="p-5 space-y-3">
+              <div className="text-sm font-semibold">Add New Skill / Interest</div>
+              <div className="flex gap-2 flex-wrap">
+                <Input placeholder="Emoji (optional)" value={newIntEmoji} onChange={(e) => setNewIntEmoji(e.target.value)} className="w-24 shrink-0" maxLength={8} />
+                <Input placeholder="Name (e.g. Machine Learning)" value={newIntName} onChange={(e) => setNewIntName(e.target.value)} className="flex-1 min-w-32" />
+                <Input placeholder="Category (e.g. Technology)" value={newIntCat} onChange={(e) => setNewIntCat(e.target.value)} className="flex-1 min-w-32" />
+                <Button disabled={!newIntName.trim() || !newIntCat.trim() || saving} onClick={addInterest} className="gap-1.5 shrink-0">
+                  <PlusCircle className="w-4 h-4" /> Add
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+
+          {intsLoading ? (
+            <div className="text-sm text-muted-foreground">Loading…</div>
+          ) : intCategories.length === 0 ? (
+            <div className="text-sm text-muted-foreground py-6 text-center">No skills/interests yet. Add one above.</div>
+          ) : (
+            intCategories.map((cat) => (
+              <Card key={cat} className="bg-card border-card-border">
+                <CardHeader className="pb-2 pt-4 px-5">
+                  <CardTitle className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">{cat}</CardTitle>
+                </CardHeader>
+                <CardContent className="px-5 pb-4">
+                  <div className="flex flex-wrap gap-2">
+                    {interests.filter((i) => i.category === cat).map((interest) => (
+                      <div
+                        key={interest.id}
+                        className="group flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-secondary/60 border border-border/50 text-sm"
+                      >
+                        {interest.emoji && <span>{interest.emoji}</span>}
+                        <span>{interest.name}</span>
+                        <div className="flex gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
+                          <button onClick={() => setEditInt(interest)} className="p-0.5 rounded hover:text-primary transition-colors text-muted-foreground" title="Edit">
+                            <Pencil className="w-3 h-3" />
+                          </button>
+                          <button onClick={() => deleteInterest(interest.id)} className="p-0.5 rounded hover:text-destructive transition-colors text-muted-foreground" title="Delete">
+                            <X className="w-3 h-3" />
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+            ))
+          )}
+
+          {editInt && (
+            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+              <div className="bg-card border border-border rounded-xl shadow-2xl w-full max-w-sm p-6 space-y-4">
+                <div className="flex items-center justify-between">
+                  <span className="font-bold">Edit Skill / Interest</span>
+                  <button onClick={() => setEditInt(null)}><X className="w-4 h-4 text-muted-foreground" /></button>
+                </div>
+                <div className="space-y-3">
+                  <div>
+                    <Label className="text-xs">Emoji</Label>
+                    <Input value={editInt.emoji ?? ""} onChange={(e) => setEditInt({ ...editInt, emoji: e.target.value })} maxLength={8} placeholder="Optional emoji" className="mt-1" />
+                  </div>
+                  <div>
+                    <Label className="text-xs">Name</Label>
+                    <Input value={editInt.name} onChange={(e) => setEditInt({ ...editInt, name: e.target.value })} className="mt-1" />
+                  </div>
+                  <div>
+                    <Label className="text-xs">Category</Label>
+                    <Input value={editInt.category} onChange={(e) => setEditInt({ ...editInt, category: e.target.value })} className="mt-1" />
+                  </div>
+                </div>
+                <div className="flex gap-2">
+                  <Button variant="ghost" className="flex-1" onClick={() => setEditInt(null)}>Cancel</Button>
+                  <Button className="flex-1" disabled={saving || !editInt.name.trim()} onClick={saveInterest}>
+                    {saving ? "Saving…" : "Save Changes"}
+                  </Button>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 }

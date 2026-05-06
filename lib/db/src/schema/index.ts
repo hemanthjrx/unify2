@@ -13,3 +13,4 @@ export * from "./mentorship";
 export * from "./announcements";
 export * from "./reports";
 export * from "./warnings";
+export * from "./categories";

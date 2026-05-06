@@ -341,25 +341,36 @@ function ProductCard({
 
   return (
     <Card className="bg-card border-card-border overflow-hidden">
-      {mainImage && !imgError ? (
-        <div className="h-40 bg-muted overflow-hidden">
-          <img
-            src={imgUrl(mainImage)}
-            alt={product.title}
-            className="w-full h-full object-cover"
-            onError={() => setImgError(true)}
-          />
-        </div>
-      ) : (
-        <div className="h-40 bg-muted flex items-center justify-center">
-          <ImageIcon className="w-8 h-8 text-muted-foreground/40" />
-        </div>
-      )}
+      <button
+        className="w-full text-left"
+        onClick={() => navigate(`/marketplace/${product.id}`)}
+        aria-label={`View details for ${product.title}`}
+      >
+        {mainImage && !imgError ? (
+          <div className="h-40 bg-muted overflow-hidden">
+            <img
+              src={imgUrl(mainImage)}
+              alt={product.title}
+              className="w-full h-full object-cover hover:scale-105 transition-transform duration-200"
+              onError={() => setImgError(true)}
+            />
+          </div>
+        ) : (
+          <div className="h-40 bg-muted flex items-center justify-center hover:bg-muted/80 transition-colors">
+            <ImageIcon className="w-8 h-8 text-muted-foreground/40" />
+          </div>
+        )}
+      </button>
 
       <CardContent className="p-4 space-y-3">
         <div className="flex items-start justify-between gap-2">
           <div className="flex-1 min-w-0">
-            <h3 className="font-semibold text-sm leading-tight truncate">{product.title}</h3>
+            <button
+              className="text-left w-full"
+              onClick={() => navigate(`/marketplace/${product.id}`)}
+            >
+              <h3 className="font-semibold text-sm leading-tight truncate hover:text-primary transition-colors">{product.title}</h3>
+            </button>
             <div className="flex items-center gap-2 mt-1">
               <span className="text-base font-bold text-primary">₹{product.price}</span>
               <Badge variant="secondary" className="text-[10px] h-4 px-1.5">

@@ -68,8 +68,13 @@ function DocumentUploader({
   const [err, setErr] = useState<string | null>(null);
 
   async function handleFile(file: File) {
-    if (file.size > 10 * 1024 * 1024) {
-      setErr("File must be under 10 MB");
+    const allowed = ["image/jpeg", "image/jpg", "image/png", "image/webp", "application/pdf"];
+    if (!allowed.includes(file.type)) {
+      setErr("Invalid format. Please upload a JPG, PNG, WEBP, or PDF file.");
+      return;
+    }
+    if (file.size > 3 * 1024 * 1024) {
+      setErr("File is too large. Maximum size is 3 MB.");
       return;
     }
     setErr(null);
@@ -117,7 +122,7 @@ function DocumentUploader({
           ) : (
             <>
               <Upload className="w-4 h-4" />
-              Click to upload (PDF, JPG, PNG)
+              Click to upload (PDF, JPG, PNG · max 3 MB)
             </>
           )}
         </button>
@@ -126,7 +131,7 @@ function DocumentUploader({
       <input
         ref={inputRef}
         type="file"
-        accept="image/*,application/pdf"
+        accept="image/jpeg,image/jpg,image/png,image/webp,application/pdf"
         className="hidden"
         onChange={(e) => { const f = e.target.files?.[0]; if (f) handleFile(f); }}
       />

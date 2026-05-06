@@ -18,7 +18,9 @@ import UserProfilePage from "@/pages/user-profile";
 import NotificationsPage from "@/pages/notifications";
 import SearchPage from "@/pages/search";
 import MarketplacePage from "@/pages/marketplace";
+import MarketplaceDetailPage from "@/pages/marketplace-detail";
 import FreelancePage from "@/pages/freelance";
+import FreelanceDetailPage from "@/pages/freelance-detail";
 import AdminPage from "@/pages/admin";
 import HackathonsPage from "@/pages/hackathons";
 import FollowersPage from "@/pages/followers";
@@ -67,6 +69,11 @@ function ProtectedShell({ children }: { children: React.ReactNode }) {
     return null;
   }
 
+  if (profile?.role === "moderator" && (location === "/" || location === "/dashboard")) {
+    navigate("/admin");
+    return null;
+  }
+
   if (location === "/onboarding") {
     return <>{children}</>;
   }
@@ -89,7 +96,9 @@ function ProtectedRoutes() {
         <Route path="/notifications" component={NotificationsPage} />
         <Route path="/search" component={SearchPage} />
         <Route path="/marketplace" component={MarketplacePage} />
+        <Route path="/marketplace/:id" component={MarketplaceDetailPage} />
         <Route path="/freelance" component={FreelancePage} />
+        <Route path="/freelance/:id" component={FreelanceDetailPage} />
         <Route path="/hackathons" component={HackathonsPage} />
         <Route path="/messages" component={MessagesPage} />
         <Route path="/messages/:username" component={MessagesPage} />

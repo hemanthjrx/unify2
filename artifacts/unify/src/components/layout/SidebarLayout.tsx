@@ -95,10 +95,10 @@ export function SidebarLayout({ children }: { children: React.ReactNode }) {
           {(isAdmin || isModerator) && (
             <Link
               href="/admin"
-              className={`flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors text-sm mb-1 ${
+              className={`flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all text-sm mb-1 border ${
                 location.startsWith("/admin")
-                  ? "bg-sidebar-accent text-sidebar-accent-foreground font-medium"
-                  : "text-sidebar-foreground/70 hover:bg-sidebar-accent/60 hover:text-sidebar-foreground"
+                  ? "bg-orange-500/15 text-orange-300 font-medium border-orange-500/40 shadow-[0_0_14px_rgba(251,146,60,0.3)]"
+                  : "text-orange-400/80 hover:bg-orange-500/10 hover:text-orange-300 border-orange-500/25 shadow-[0_0_8px_rgba(251,146,60,0.15)]"
               }`}
               data-testid="link-sidebar-admin"
             >

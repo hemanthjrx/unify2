@@ -41,10 +41,10 @@ For nested/wildcard routes (e.g. Clerk's `<SignIn routing="path">`), use `path="
 
 ## Unify domain notes
 
-- DB schema: `users`, `interests`, `user_interests`, `communities` (+bannerImageUrl, +profileImageUrl, +leaderId), `community_members`, `follows`, `activity`, `posts` (+hackathon new fields), `post_likes`, `notifications`, `messages`, `reports`, `warning_strikes`.
+- DB schema: `users`, `interests`, `user_interests`, `communities`, `community_members`, `follows`, `activity`, `posts`, `post_likes`, `notifications`, `messages`, `reports`, `warning_strikes`, `categories` (type=marketplace|freelance, name).
 - Coin rewards: +5 on community join, +5 on hackathon post, +2 per regular post, +3 per mentorship reply, +2 bonus when reply marked helpful.
-- Dashboard practice upload limit: 5.
-- Seeded: 26 interests, 35 communities (4 categories), 50 students (45 approved, 5 pending), 5 posts/section.
+- Sign-up doc upload: 3MB limit, allowed types: JPG/PNG/WEBP/PDF (instant format feedback).
+- Seeded: 26 interests, 35 communities, 50 students, 8 marketplace categories, 9 freelance categories (all in `categories` table).
 - Frontend uses generated hooks from `@workspace/api-client-react` (orval). Direct fetch calls use `useAuthenticatedFetch` from `src/lib/api-fetch.ts`.
 - `lib/api-init.ts` sets fetch base URL to `window.location.origin` so API calls go through the same proxy.
 
@@ -56,11 +56,13 @@ For nested/wildcard routes (e.g. Clerk's `<SignIn routing="path">`), use `path="
 - `/users/:username` — other user's profile (private lock screen if private + not following)
 - `/notifications` — follow requests (Accept/Decline), likes, follows, follow_accepted events
 - `/search` — search users + communities
-- `/marketplace` — buy/sell items
-- `/freelance` — freelance listings
-- `/hackathons` — post hackathon invites (date, location, team size, skills, college, fee, problem statement, registration/location links), search bar, like, delete own
+- `/marketplace` — buy/sell items; card click → `/marketplace/:id` detail page
+- `/marketplace/:id` — full product detail: image gallery, seller info, "I'm Interested" (sends DM), reviews, zoom/share
+- `/freelance` — freelance listings; card click → `/freelance/:id` detail page
+- `/freelance/:id` — full service detail: image gallery, provider info, "I'm Interested" (sends DM), reviews, zoom/share
+- `/hackathons` — post hackathon invites, search bar, like, delete own
 - `/messages`, `/messages/:username` — DM split-panel with 3-message pending limit, file attachments
-- `/admin` — admin panel (admin role: all tabs; moderator role: Applications + Reports only). Warning strikes system: up to 5 strikes, 5th auto-bans. WarningBanModal (warn + ban sections). Community leader search by name/USN. Admin/Mod panel link shown at TOP of sidebar.
+- `/admin` — admin panel (admin role: all tabs; moderator role: Applications + Reports only). Moderators auto-redirect to /admin on login. Orange glow border on sidebar link. Tabs: Applications (docs always visible inline, click "Open document" → popup with zoom + external link), Reports, Students, Communities, Marketplace, Freelance, Categories (CRUD for marketplace/freelance categories + skills/interests), Moderators.
 
 ### Private Accounts & Follow Requests
 - `users.is_private` (default `true`) — if private, following creates a `pending` follow request + `follow_request` notification

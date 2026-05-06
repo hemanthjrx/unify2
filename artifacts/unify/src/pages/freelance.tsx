@@ -365,20 +365,26 @@ function ServiceCard({
   return (
     <Card className="bg-card border-card-border overflow-hidden">
       <div className="h-1.5" style={{ backgroundColor: accent }} />
-      {mainImage && !imgError ? (
-        <div className="h-36 bg-muted overflow-hidden">
-          <img
-            src={imgUrl(mainImage)}
-            alt={service.title}
-            className="w-full h-full object-cover"
-            onError={() => setImgError(true)}
-          />
-        </div>
-      ) : (
-        <div className="h-36 bg-muted flex items-center justify-center">
-          <ImageIcon className="w-8 h-8 text-muted-foreground/40" />
-        </div>
-      )}
+      <button
+        className="w-full text-left"
+        onClick={() => navigate(`/freelance/${service.id}`)}
+        aria-label={`View details for ${service.title}`}
+      >
+        {mainImage && !imgError ? (
+          <div className="h-36 bg-muted overflow-hidden">
+            <img
+              src={imgUrl(mainImage)}
+              alt={service.title}
+              className="w-full h-full object-cover hover:scale-105 transition-transform duration-200"
+              onError={() => setImgError(true)}
+            />
+          </div>
+        ) : (
+          <div className="h-36 bg-muted flex items-center justify-center hover:bg-muted/80 transition-colors">
+            <ImageIcon className="w-8 h-8 text-muted-foreground/40" />
+          </div>
+        )}
+      </button>
 
       <CardContent className="p-4 space-y-3">
         <div className="flex items-start justify-between gap-2">
@@ -390,7 +396,12 @@ function ServiceCard({
             >
               {service.category}
             </Badge>
-            <h3 className="font-semibold text-sm leading-tight">{service.title}</h3>
+            <button
+              className="text-left w-full"
+              onClick={() => navigate(`/freelance/${service.id}`)}
+            >
+              <h3 className="font-semibold text-sm leading-tight hover:text-primary transition-colors">{service.title}</h3>
+            </button>
           </div>
           {service.isOwner && (
             <div className="flex gap-1 shrink-0">

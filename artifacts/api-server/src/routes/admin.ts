@@ -9,6 +9,8 @@ import {
   freelanceServicesTable,
   reportsTable,
   warningStrikesTable,
+  categoriesTable,
+  interestsTable,
 } from "@workspace/db";
 import { desc, eq, ilike, or, sql, and } from "drizzle-orm";
 import { withAdminUser, withModeratorOrAdmin } from "../lib/auth";
@@ -611,6 +613,64 @@ router.post("/admin/users/:userId/warnings", withModeratorOrAdmin, async (req, r
   await db.insert(activityTable).values({ actorId: issuedById, kind: "warning_issued", message: `Issued warning strike #${count} to user #${userId}` });
 
   res.json({ ok: true, totalWarnings: Number(count), autoBanned });
+});
+
+router.get("/admin/categories", withAdminUser, async (req, res) => {
+  const type = req.query.type as string | undefined;
+  const rows = await db
+    .select()
+    .from(categoriesTable)
+    .where(type ? eq(categoriesTable.type, type) : undefined)
+    .orderBy(categoriesTable.type, categoriesTable.name);
+  res.json(rows);
+});
+
+router.post("/admin/categories", withAdminUser, async (req, res) => {
+  const body = z.object({
+    type: z.enum(["marketplace", "freelance"]),
+    name: z.string().min(1).max(60),
+  }).parse(req.body);
+  const [row] = await db.insert(categoriesTable).values(body).returning();
+  res.status(201).json(row);
+});
+
+router.delete("/admin/categories/:id", withAdminUser, async (req, res) => {
+  const id = Number(req.params.id);
+  await db.delete(categoriesTable).where(eq(categoriesTable.id, id));
+  res.status(204).send();
+});
+
+router.get("/admin/interests", withAdminUser, async (_req, res) => {
+  const rows = await db.select().from(interestsTable).orderBy(interestsTable.category, interestsTable.name);
+  res.json(rows);
+});
+
+router.post("/admin/interests", withAdminUser, async (req, res) => {
+  const body = z.object({
+    name: z.string().min(1).max(80),
+    category: z.string().min(1).max(60),
+    emoji: z.string().max(10).optional().nullable(),
+  }).parse(req.body);
+  const [row] = await db.insert(interestsTable).values(body).returning();
+  res.status(201).json(row);
+});
+
+router.patch("/admin/interests/:id", withAdminUser, async (req, res) => {
+  const id = Number(req.params.id);
+  const body = z.object({
+    name: z.string().min(1).max(80).optional(),
+    category: z.string().min(1).max(60).optional(),
+    emoji: z.string().max(10).optional().nullable(),
+  }).parse(req.body);
+  const [row] = await db.update(interestsTable).set(body).where(eq(interestsTable.id, id)).returning();
+  if (!row) { res.status(404).json({ error: "not_found" }); return; }
+  res.json(row);
+});
+
+router.delete("/admin/interests/:id", withAdminUser, async (req, res) => {
+  const id = Number(req.params.id);
+  await db.delete(interestsTable).where(eq(interestsTable.id, id));
+  res.status(204).send();
 });
 
 export default router;
