@@ -7,7 +7,7 @@ import {
   userInterestsTable,
   interestsTable,
 } from "@workspace/db";
-import { desc, eq, sql } from "drizzle-orm";
+import { desc, eq, sql, notInArray } from "drizzle-orm";
 import { GetDashboardSummaryResponse } from "@workspace/api-zod";
 import { withCurrentUser } from "../lib/auth";
 
@@ -54,7 +54,7 @@ router.get("/dashboard/summary", withCurrentUser, async (req, res) => {
       coins: usersTable.coins,
     })
     .from(usersTable)
-    .where(sql`${usersTable.username} is not null`)
+    .where(sql`${usersTable.username} is not null and ${usersTable.role} not in ('admin', 'moderator')`)
     .orderBy(desc(usersTable.coins))
     .limit(8);
 
@@ -72,7 +72,7 @@ router.get("/dashboard/summary", withCurrentUser, async (req, res) => {
     const [{ count: usersAhead }] = await db
       .select({ count: sql<number>`count(*)::int` })
       .from(usersTable)
-      .where(sql`${usersTable.coins} > ${me.coins} and ${usersTable.username} is not null`);
+      .where(sql`${usersTable.coins} > ${me.coins} and ${usersTable.username} is not null and ${usersTable.role} not in ('admin', 'moderator')`);
     myRank = usersAhead + 1;
   }
 

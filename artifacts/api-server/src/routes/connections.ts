@@ -3,7 +3,7 @@ import {
   db, usersTable, followsTable, userInterestsTable, interestsTable,
   activityTable, notificationsTable,
 } from "@workspace/db";
-import { and, eq, ne, sql, inArray } from "drizzle-orm";
+import { and, eq, ne, sql, inArray, notInArray } from "drizzle-orm";
 import { withCurrentUser } from "../lib/auth";
 import { buildPublicProfile } from "../lib/profile";
 
@@ -30,7 +30,7 @@ router.get("/discover/people", withCurrentUser, async (req, res) => {
         : sql<number>`0`.as("shared_count"),
     })
     .from(usersTable)
-    .where(and(ne(usersTable.id, viewerId), sql`${usersTable.username} is not null`))
+    .where(and(ne(usersTable.id, viewerId), sql`${usersTable.username} is not null`, notInArray(usersTable.role, ["admin", "moderator"])))
     .orderBy(sql`shared_count desc`, sql`${usersTable.coins} desc`)
     .limit(20);
 
