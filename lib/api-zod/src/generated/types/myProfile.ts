@@ -42,4 +42,6 @@ export interface MyProfile {
   communityCount: number;
   followerCount: number;
   followingCount: number;
+  /** @nullable */
+  usernameChangedAt?: string | null;
 }

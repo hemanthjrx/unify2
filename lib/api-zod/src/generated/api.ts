@@ -47,6 +47,7 @@ export const GetMyProfileResponse = zod.object({
   communityCount: zod.number(),
   followerCount: zod.number(),
   followingCount: zod.number(),
+  usernameChangedAt: zod.string().nullish(),
 });
 
 /**
@@ -99,6 +100,7 @@ export const UpdateMyProfileResponse = zod.object({
   communityCount: zod.number(),
   followerCount: zod.number(),
   followingCount: zod.number(),
+  usernameChangedAt: zod.string().nullish(),
 });
 
 /**

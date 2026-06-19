@@ -40,6 +40,7 @@ export async function buildMyProfile(userId: number) {
     communityCount,
     followerCount,
     followingCount,
+    usernameChangedAt: user.usernameChangedAt?.toISOString() ?? null,
   };
 }
 

@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   useGetMyProfile,
   useGetUserPosts,
@@ -29,6 +29,9 @@ import {
   Globe,
   Linkedin,
   Github,
+  Pencil,
+  AlertTriangle,
+  Clock,
 } from "lucide-react";
 
 const BRANCHES = [
@@ -146,6 +149,14 @@ export default function ProfilePage() {
   const [showAvatarPicker, setShowAvatarPicker] = useState(false);
   const [showBannerPicker, setShowBannerPicker] = useState(false);
 
+  // Username edit state
+  const [showUsernameModal, setShowUsernameModal] = useState(false);
+  const [newUsername, setNewUsername] = useState("");
+  const [usernameError, setUsernameError] = useState("");
+  const [usernameCountdown, setUsernameCountdown] = useState(5);
+  const [usernameSaving, setUsernameSaving] = useState(false);
+  const countdownRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
   useEffect(() => {
     if (!profile) return;
     setBio(profile.bio ?? "");
@@ -171,6 +182,58 @@ export default function ProfilePage() {
     }
     return Array.from(out.entries());
   }, [interests]);
+
+  function openUsernameModal() {
+    setNewUsername(profile?.username ?? "");
+    setUsernameError("");
+    setUsernameCountdown(5);
+    setShowUsernameModal(true);
+    if (countdownRef.current) clearInterval(countdownRef.current);
+    countdownRef.current = setInterval(() => {
+      setUsernameCountdown((n) => {
+        if (n <= 1) {
+          clearInterval(countdownRef.current!);
+          return 0;
+        }
+        return n - 1;
+      });
+    }, 1000);
+  }
+
+  function closeUsernameModal() {
+    setShowUsernameModal(false);
+    if (countdownRef.current) clearInterval(countdownRef.current);
+  }
+
+  async function saveUsername() {
+    const trimmed = newUsername.trim();
+    if (!trimmed || trimmed === profile?.username) { closeUsernameModal(); return; }
+    if (trimmed.length < 3 || trimmed.length > 24) {
+      setUsernameError("Username must be 3–24 characters.");
+      return;
+    }
+    if (!/^[a-zA-Z0-9_]+$/.test(trimmed)) {
+      setUsernameError("Only letters, numbers, and underscores allowed.");
+      return;
+    }
+    setUsernameSaving(true);
+    setUsernameError("");
+    try {
+      await update.mutateAsync({ data: { username: trimmed } });
+      qc.invalidateQueries({ queryKey: getGetMyProfileQueryKey() });
+      qc.invalidateQueries({ queryKey: getGetDashboardSummaryQueryKey() });
+      closeUsernameModal();
+      setSavedAt(new Date());
+    } catch (err: unknown) {
+      const e = err as { response?: { data?: { error?: string; message?: string; daysLeft?: number } } };
+      const data = e?.response?.data;
+      if (data?.error === "username_taken") setUsernameError("That username is already taken. Try another.");
+      else if (data?.error === "username_cooldown") setUsernameError(data.message ?? "You can't change your username yet.");
+      else setUsernameError("Something went wrong. Please try again.");
+    } finally {
+      setUsernameSaving(false);
+    }
+  }
 
   function addSkill() {
     const s = skillInput.trim();
@@ -322,10 +385,31 @@ export default function ProfilePage() {
 
           {/* Row 2: username + links — always below the banner */}
           <div className="mt-3">
-            <div className="text-2xl font-bold">
-              {profile.username ? `@${profile.username}` : profile.name || "Student"}
+            <div className="flex items-center gap-2">
+              <div className="text-2xl font-bold">
+                {profile.username ? `@${profile.username}` : profile.name || "Student"}
+              </div>
+              <button
+                onClick={openUsernameModal}
+                className="flex items-center gap-1 px-2 py-1 rounded-md bg-secondary hover:bg-accent/40 border border-border text-xs text-muted-foreground hover:text-foreground transition-colors"
+                title="Edit username"
+              >
+                <Pencil className="w-3 h-3" /> Edit
+              </button>
             </div>
-            <div className="text-sm text-muted-foreground">{profile.email}</div>
+            {profile.usernameChangedAt && (
+              <div className="flex items-center gap-1 mt-0.5 text-[11px] text-muted-foreground">
+                <Clock className="w-3 h-3" />
+                {(() => {
+                  const daysSince = (Date.now() - new Date(profile.usernameChangedAt).getTime()) / (1000 * 60 * 60 * 24);
+                  const daysLeft = Math.ceil(100 - daysSince);
+                  return daysLeft > 0
+                    ? `Username can be changed again in ${daysLeft} day${daysLeft !== 1 ? "s" : ""}`
+                    : "Username is now changeable";
+                })()}
+              </div>
+            )}
+            <div className="text-sm text-muted-foreground mt-0.5">{profile.email}</div>
             {/* Social links */}
             <div className="flex flex-wrap gap-2 mt-3">
               {profile.portfolioUrl ? (
@@ -594,6 +678,82 @@ export default function ProfilePage() {
           )}
         </Button>
       </div>
+
+      {/* Username Change Modal */}
+      {showUsernameModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: "rgba(0,0,0,0.7)" }}>
+          <div className="bg-card border border-border rounded-2xl shadow-2xl w-full max-w-md p-6 space-y-5">
+            {/* Header */}
+            <div className="flex items-start justify-between gap-3">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-full bg-amber-500/15 flex items-center justify-center shrink-0">
+                  <AlertTriangle className="w-5 h-5 text-amber-400" />
+                </div>
+                <div>
+                  <h2 className="text-base font-bold">Change username</h2>
+                  <p className="text-xs text-muted-foreground">Read the warning before continuing</p>
+                </div>
+              </div>
+              <button onClick={closeUsernameModal} className="text-muted-foreground hover:text-foreground mt-0.5">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Warning box */}
+            <div className="rounded-xl border border-amber-500/30 bg-amber-500/10 p-4 space-y-2">
+              <p className="text-sm font-semibold text-amber-300 flex items-center gap-1.5">
+                <AlertTriangle className="w-4 h-4" /> Before you change your username
+              </p>
+              <ul className="text-xs text-amber-200/80 space-y-1.5 list-disc list-inside">
+                <li>Your old username <strong>@{profile.username}</strong> will be released immediately and can be claimed by anyone.</li>
+                <li>Any links or mentions using your old username will stop working.</li>
+                <li>You can only change your username <strong>once every 100 days</strong>.</li>
+                <li>Your posts and community memberships stay intact.</li>
+              </ul>
+            </div>
+
+            {/* New username input */}
+            <div className="space-y-2">
+              <Label htmlFor="new-username" className="text-sm">New username</Label>
+              <div className="relative">
+                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm">@</span>
+                <Input
+                  id="new-username"
+                  value={newUsername}
+                  onChange={(e) => { setNewUsername(e.target.value); setUsernameError(""); }}
+                  className="pl-7"
+                  placeholder="yourhandle"
+                  maxLength={24}
+                  autoComplete="off"
+                  autoFocus
+                />
+              </div>
+              <p className="text-[11px] text-muted-foreground">3–24 characters. Letters, numbers, and underscores only.</p>
+              {usernameError && (
+                <p className="text-xs text-destructive font-medium">{usernameError}</p>
+              )}
+            </div>
+
+            {/* Actions */}
+            <div className="flex gap-3 pt-1">
+              <Button variant="ghost" className="flex-1" onClick={closeUsernameModal}>
+                Cancel
+              </Button>
+              <Button
+                className="flex-1"
+                disabled={usernameCountdown > 0 || usernameSaving || !newUsername.trim() || newUsername.trim() === profile.username}
+                onClick={saveUsername}
+              >
+                {usernameSaving
+                  ? "Saving…"
+                  : usernameCountdown > 0
+                  ? `Continue (${usernameCountdown}s)`
+                  : "Continue"}
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

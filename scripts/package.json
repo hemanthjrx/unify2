@@ -13,6 +13,7 @@
     "seed-demo": "tsx ./src/seed-demo.ts",
     "seed-applications": "tsx ./src/seed-applications.ts",
     "seed-content": "tsx ./src/seed-content.ts",
+    "seed-usernames": "tsx ./src/seed-usernames.ts",
     "typecheck": "tsc -p tsconfig.json --noEmit"
   },
   "dependencies": {

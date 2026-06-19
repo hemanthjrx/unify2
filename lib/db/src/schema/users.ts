@@ -46,6 +46,7 @@ export const usersTable = pgTable(
     reviewedBy: integer("reviewed_by"),
     reviewedAt: timestamp("reviewed_at", { withTimezone: true }),
     rejectionReason: text("rejection_reason"),
+    usernameChangedAt: timestamp("username_changed_at", { withTimezone: true }),
     createdAt: timestamp("created_at", { withTimezone: true })
       .notNull()
       .defaultNow(),

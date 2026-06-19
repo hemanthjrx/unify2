@@ -30,10 +30,33 @@ router.get("/me", withCurrentUser, async (req, res) => {
 
 router.patch("/me", withCurrentUser, async (req, res) => {
   const body = UpdateMyProfileBody.parse(req.body);
+
+  // Enforce 100-day cooldown on username changes
+  if (body.username !== undefined) {
+    const [current] = await db.select().from(usersTable).where(eq(usersTable.id, req.currentUserId!)).limit(1);
+    if (current?.username !== body.username) {
+      // Check uniqueness
+      const [taken] = await db.select().from(usersTable).where(eq(usersTable.username, body.username)).limit(1);
+      if (taken && taken.id !== req.currentUserId) {
+        res.status(409).json({ error: "username_taken", message: "This username is already taken." });
+        return;
+      }
+      // Check cooldown
+      if (current?.usernameChangedAt) {
+        const daysSince = (Date.now() - new Date(current.usernameChangedAt).getTime()) / (1000 * 60 * 60 * 24);
+        if (daysSince < 100) {
+          const daysLeft = Math.ceil(100 - daysSince);
+          res.status(429).json({ error: "username_cooldown", daysLeft, message: `You can change your username again in ${daysLeft} day${daysLeft !== 1 ? "s" : ""}.` });
+          return;
+        }
+      }
+    }
+  }
+
   await db
     .update(usersTable)
     .set({
-      ...(body.username !== undefined ? { username: body.username } : {}),
+      ...(body.username !== undefined ? { username: body.username, usernameChangedAt: new Date() } : {}),
       ...(body.bio !== undefined ? { bio: body.bio } : {}),
       ...(body.skills !== undefined ? { skills: body.skills } : {}),
       ...(body.avatarColor !== undefined ? { avatarColor: body.avatarColor } : {}),
