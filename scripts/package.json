@@ -11,6 +11,7 @@
     "seed-main": "tsx ./src/seed-main.ts",
     "create-admin-users": "tsx ./src/create-admin-users.ts",
     "seed-demo": "tsx ./src/seed-demo.ts",
+    "seed-applications": "tsx ./src/seed-applications.ts",
     "typecheck": "tsc -p tsconfig.json --noEmit"
   },
   "dependencies": {
