@@ -1,0 +1,290 @@
+Create a realistic demo dataset for the college networking platform with the following requirements.
+
+PRIMARY STUDENTS (must exist exactly as specified)
+
+1. Abhishek
+   USN: 1EW25IC001
+   Username: 1EW25IC001
+   Password: abhishek123
+
+2. Abu Talha
+   USN: 1EW25IC002
+   Username: 1EW25IC002
+   Password: abu123
+
+3. Chandan S
+   USN: 1EW25IC008
+   Username: 1EW25IC008
+   Password: chandan123
+
+4. Gagan R
+   USN: 1EW25IC011
+   Username: 1EW25IC011
+   Password: gagan123
+
+5. Hemanth Raj
+   USN: 1EW25IC020
+   Username: 1EW25IC020
+   Password: hemanth123
+
+ADDITIONAL STUDENTS
+
+Generate 15 more realistic Indian students with:
+
+* Unique USNs
+* Profile photos
+* Bio
+* Skills
+* Interests
+* Semester 2
+* CSE IoT branch
+* Activity history
+* Marketplace activity
+* Follow relationships
+
+Total Students: 20
+
+MODERATORS
+
+1. Dr. Ravi Kumar
+   Username: moderator01
+   Password: mod@123
+
+2. Prof. Anjali Sharma
+   Username: moderator02
+   Password: mod@123
+
+3. Dr. Shashank Rao
+   Username: moderator03
+   Password: mod@123
+
+4. Prof. Deepa N
+   Username: moderator04
+   Password: mod@123
+
+Create realistic moderator activities:
+
+* User verification
+* Marketplace approvals
+* Warning issuance
+* Account reviews
+* Hackathon approvals
+
+FOLLOW NETWORK
+
+Create 100+ follow relationships.
+
+Primary users should follow and be followed by many users.
+
+Create:
+
+* Mutual follows
+* One-way follows
+* Follow requests pending
+
+MARKETPLACE
+
+Create 20 products.
+
+Examples:
+
+* Arduino Uno
+* ESP32
+* Raspberry Pi
+* Engineering Drawing Kit
+* Calculator
+* Mouse
+* Keyboard
+* Laptop Stand
+* Headphones
+* VTU Notes
+
+Include:
+
+* Product images
+* Prices
+* Seller
+* Views
+* Likes
+* Saved counts
+* Purchase requests
+
+FREELANCING SERVICES
+
+Create 10 services.
+
+Examples:
+
+* Wedding Invitation Design
+* Logo Design
+* Poster Design
+* React Development
+* Python Assignment Help
+* AI PPT Creation
+* Resume Design
+* UI UX Design
+* Portfolio Website Development
+* Video Editing
+
+Include:
+
+* Ratings
+* Reviews
+* Orders completed
+* Portfolio images
+
+CHATS
+
+Create:
+
+* 30 accepted chats
+* 10 marketplace chats
+* 10 freelancing chats
+* 5 group chats
+
+Each chat should contain 5–15 realistic messages.
+
+PENDING CHAT REQUESTS
+
+Create 5 pending requests where:
+
+Sender has sent 3 messages.
+Receiver has not accepted.
+Messages remain hidden until acceptance.
+
+WARNINGS
+
+Create warning records.
+
+Examples:
+
+Warning 1
+User: Rahul Sharma
+Reason: Spam posting
+Status: Active
+
+Warning 2
+User: Darshan K
+Reason: Abusive language
+Status: Resolved
+
+Warning 3
+User: Naveen R
+Reason: Fake marketplace listing
+Status: Active
+
+Total warnings: 10
+
+BANNED ACCOUNTS
+
+Create 5 banned users.
+
+Reasons:
+
+* Fraud
+* Harassment
+* Fake listings
+* Multiple violations
+* Impersonation
+
+Include:
+
+* Ban date
+* Moderator who banned
+* Appeal status
+
+APPLICATIONS
+
+Create 20 applications.
+
+Statuses:
+
+* Pending
+* Approved
+* Rejected
+
+Examples:
+
+Application Type:
+
+* Moderator Application
+* Club Application
+* Event Volunteer Application
+* Marketplace Seller Verification
+
+Distribution:
+
+* 8 Approved
+* 6 Pending
+* 6 Rejected
+
+Include moderator comments.
+
+HACKATHONS
+
+Create 5 hackathons.
+
+Examples:
+
+1. AI Innovation Challenge 2026
+2. Smart Campus Hackathon
+3. Cyber Security Sprint
+4. IoT Buildathon
+5. CodeFest 2026
+
+Each hackathon should contain:
+
+* Banner image
+* Description
+* Registration count
+* Teams
+* Winners
+* Prizes
+* Start and End dates
+
+HACKATHON APPLICATIONS
+
+Create 30 registrations.
+
+Statuses:
+
+* Accepted
+* Rejected
+* Pending
+
+Include:
+
+* Team name
+* Members
+* Project title
+* Project description
+
+NOTIFICATIONS
+
+Create 100 notifications.
+
+Examples:
+
+* New follower
+* Product liked
+* Service booked
+* Chat request received
+* Hackathon accepted
+* Application approved
+* Warning received
+* Product sold
+* Marketplace request accepted
+
+ACTIVITY FEED
+
+Create 100 feed activities.
+
+Examples:
+
+* Hemanth Raj uploaded a new service
+* Chandan S listed Raspberry Pi 4
+* Abu Talha joined Smart Campus Hackathon
+* Gagan R completed a freelancing order
+* Abhishek received 5-star review
+
+Generate enough interconnected data so every dashboard, analytics chart, moderation page, chat page, marketplace page, freelancing page, hackathon page, profile page, and notification page appears fully populated and realistic.

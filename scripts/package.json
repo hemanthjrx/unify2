@@ -10,6 +10,7 @@
     "seed-samples": "tsx ./src/seed-samples.ts",
     "seed-main": "tsx ./src/seed-main.ts",
     "create-admin-users": "tsx ./src/create-admin-users.ts",
+    "seed-demo": "tsx ./src/seed-demo.ts",
     "typecheck": "tsc -p tsconfig.json --noEmit"
   },
   "dependencies": {
