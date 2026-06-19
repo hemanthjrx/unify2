@@ -30,7 +30,7 @@ const CreateReviewBody = z.object({
   comment: z.string().max(500).optional(),
 });
 
-async function buildService(id: number, viewerId: number) {
+async function buildService(id: number, viewerId: number, isMod = false) {
   const [row] = await db
     .select({
       id: freelanceServicesTable.id,
@@ -76,7 +76,7 @@ async function buildService(id: number, viewerId: number) {
     },
     avgRating: Number(row.avgRating),
     reviewCount: row.reviewCount,
-    isOwner: row.providerId === viewerId,
+    isOwner: row.providerId === viewerId || isMod,
   };
 }
 
@@ -93,12 +93,14 @@ router.get("/freelance/services", withCurrentUser, async (req, res) => {
   }
 
   const rows = await query;
-  const services = await Promise.all(rows.map((r) => buildService(r.id, req.currentUserId!)));
+  const isMod = req.currentUserRole === "moderator" || req.currentUserRole === "admin";
+  const services = await Promise.all(rows.map((r) => buildService(r.id, req.currentUserId!, isMod)));
   res.json(services.filter(Boolean));
 });
 
 router.get("/freelance/services/:id", withCurrentUser, async (req, res) => {
-  const service = await buildService(Number(req.params.id), req.currentUserId!);
+  const isMod = req.currentUserRole === "moderator" || req.currentUserRole === "admin";
+  const service = await buildService(Number(req.params.id), req.currentUserId!, isMod);
   if (!service) {
     res.status(404).json({ error: "not_found" });
     return;
@@ -128,6 +130,7 @@ router.post("/freelance/services", withCurrentUser, async (req, res) => {
 
 router.patch("/freelance/services/:id", withCurrentUser, async (req, res) => {
   const id = Number(req.params.id);
+  const isMod = req.currentUserRole === "moderator" || req.currentUserRole === "admin";
   const [existing] = await db
     .select()
     .from(freelanceServicesTable)
@@ -135,7 +138,7 @@ router.patch("/freelance/services/:id", withCurrentUser, async (req, res) => {
     .limit(1);
 
   if (!existing) { res.status(404).json({ error: "not_found" }); return; }
-  if (existing.providerId !== req.currentUserId!) { res.status(403).json({ error: "forbidden" }); return; }
+  if (!isMod && existing.providerId !== req.currentUserId!) { res.status(403).json({ error: "forbidden" }); return; }
 
   const body = CreateServiceBody.parse(req.body);
   await db
@@ -151,12 +154,13 @@ router.patch("/freelance/services/:id", withCurrentUser, async (req, res) => {
     })
     .where(eq(freelanceServicesTable.id, id));
 
-  const service = await buildService(id, req.currentUserId!);
+  const service = await buildService(id, req.currentUserId!, isMod);
   res.json(service);
 });
 
 router.delete("/freelance/services/:id", withCurrentUser, async (req, res) => {
   const id = Number(req.params.id);
+  const isMod = req.currentUserRole === "moderator" || req.currentUserRole === "admin";
   const [existing] = await db
     .select()
     .from(freelanceServicesTable)
@@ -164,7 +168,7 @@ router.delete("/freelance/services/:id", withCurrentUser, async (req, res) => {
     .limit(1);
 
   if (!existing) { res.status(404).json({ error: "not_found" }); return; }
-  if (existing.providerId !== req.currentUserId!) { res.status(403).json({ error: "forbidden" }); return; }
+  if (!isMod && existing.providerId !== req.currentUserId!) { res.status(403).json({ error: "forbidden" }); return; }
 
   await db.delete(freelanceServicesTable).where(eq(freelanceServicesTable.id, id));
   res.json({ ok: true });

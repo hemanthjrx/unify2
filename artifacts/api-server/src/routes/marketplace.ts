@@ -29,7 +29,7 @@ const CreateReviewBody = z.object({
   comment: z.string().max(500).optional(),
 });
 
-async function buildProduct(id: number, viewerId: number) {
+async function buildProduct(id: number, viewerId: number, isMod = false) {
   const [row] = await db
     .select({
       id: marketplaceProductsTable.id,
@@ -73,7 +73,7 @@ async function buildProduct(id: number, viewerId: number) {
     },
     avgRating: Number(row.avgRating),
     reviewCount: row.reviewCount,
-    isOwner: row.sellerId === viewerId,
+    isOwner: row.sellerId === viewerId || isMod,
   };
 }
 
@@ -84,12 +84,14 @@ router.get("/marketplace/products", withCurrentUser, async (req, res) => {
     .orderBy(desc(marketplaceProductsTable.createdAt))
     .limit(50);
 
-  const products = await Promise.all(rows.map((r) => buildProduct(r.id, req.currentUserId!)));
+  const isMod = req.currentUserRole === "moderator" || req.currentUserRole === "admin";
+  const products = await Promise.all(rows.map((r) => buildProduct(r.id, req.currentUserId!, isMod)));
   res.json(products.filter(Boolean));
 });
 
 router.get("/marketplace/products/:id", withCurrentUser, async (req, res) => {
-  const product = await buildProduct(Number(req.params.id), req.currentUserId!);
+  const isMod = req.currentUserRole === "moderator" || req.currentUserRole === "admin";
+  const product = await buildProduct(Number(req.params.id), req.currentUserId!, isMod);
   if (!product) {
     res.status(404).json({ error: "not_found" });
     return;
@@ -118,6 +120,7 @@ router.post("/marketplace/products", withCurrentUser, async (req, res) => {
 
 router.patch("/marketplace/products/:id", withCurrentUser, async (req, res) => {
   const id = Number(req.params.id);
+  const isMod = req.currentUserRole === "moderator" || req.currentUserRole === "admin";
   const [existing] = await db
     .select()
     .from(marketplaceProductsTable)
@@ -125,7 +128,7 @@ router.patch("/marketplace/products/:id", withCurrentUser, async (req, res) => {
     .limit(1);
 
   if (!existing) { res.status(404).json({ error: "not_found" }); return; }
-  if (existing.sellerId !== req.currentUserId!) { res.status(403).json({ error: "forbidden" }); return; }
+  if (!isMod && existing.sellerId !== req.currentUserId!) { res.status(403).json({ error: "forbidden" }); return; }
 
   const body = CreateProductBody.parse(req.body);
   await db
@@ -140,12 +143,13 @@ router.patch("/marketplace/products/:id", withCurrentUser, async (req, res) => {
     })
     .where(eq(marketplaceProductsTable.id, id));
 
-  const product = await buildProduct(id, req.currentUserId!);
+  const product = await buildProduct(id, req.currentUserId!, isMod);
   res.json(product);
 });
 
 router.delete("/marketplace/products/:id", withCurrentUser, async (req, res) => {
   const id = Number(req.params.id);
+  const isMod = req.currentUserRole === "moderator" || req.currentUserRole === "admin";
   const [existing] = await db
     .select()
     .from(marketplaceProductsTable)
@@ -153,7 +157,7 @@ router.delete("/marketplace/products/:id", withCurrentUser, async (req, res) => 
     .limit(1);
 
   if (!existing) { res.status(404).json({ error: "not_found" }); return; }
-  if (existing.sellerId !== req.currentUserId!) { res.status(403).json({ error: "forbidden" }); return; }
+  if (!isMod && existing.sellerId !== req.currentUserId!) { res.status(403).json({ error: "forbidden" }); return; }
 
   await db.delete(marketplaceProductsTable).where(eq(marketplaceProductsTable.id, id));
   res.json({ ok: true });

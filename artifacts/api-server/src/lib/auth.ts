@@ -11,6 +11,7 @@ declare global {
   namespace Express {
     interface Request {
       currentUserId?: number;
+      currentUserRole?: string;
     }
   }
 }
@@ -29,7 +30,7 @@ export async function withCurrentUser(
   try {
     const payload = jwt.verify(token, JWT_SECRET) as { userId: number };
     // Check if user is still banned (timed bans)
-    const [user] = await db.select({ isBanned: usersTable.isBanned, bannedUntil: usersTable.bannedUntil })
+    const [user] = await db.select({ isBanned: usersTable.isBanned, bannedUntil: usersTable.bannedUntil, role: usersTable.role })
       .from(usersTable).where(eq(usersTable.id, payload.userId)).limit(1);
     if (user) {
       // Auto-lift timed ban if it has expired
@@ -41,6 +42,7 @@ export async function withCurrentUser(
       }
     }
     req.currentUserId = payload.userId;
+    req.currentUserRole = user?.role ?? "user";
     next();
   } catch {
     res.status(401).json({ error: "unauthorized" });
