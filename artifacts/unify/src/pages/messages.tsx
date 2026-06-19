@@ -236,13 +236,14 @@ export default function MessagesPage() {
             </button>
           </div>
 
-          {/* Messages */}
-          <div className="flex-1 overflow-y-auto p-4 space-y-3">
+          {/* Messages — flex-col-reverse keeps newest at bottom, scroll anchored there */}
+          <div className="flex-1 overflow-y-auto p-4 flex flex-col-reverse gap-3 min-h-0">
+            <div ref={bottomRef} />
             {loadingMsgs && <div className="text-center text-muted-foreground text-sm py-10">Loading messages…</div>}
             {!loadingMsgs && convData && convData.messages.length === 0 && (
               <div className="text-center text-muted-foreground text-sm py-10">Say hello!</div>
             )}
-            {convData?.messages.map((msg) => (
+            {[...(convData?.messages ?? [])].reverse().map((msg) => (
               <div key={msg.id} className={`flex ${msg.isMine ? "justify-end" : "justify-start"}`}>
                 <div className={`max-w-xs lg:max-w-md rounded-2xl px-4 py-2.5 ${msg.isMine ? "bg-primary text-primary-foreground rounded-br-sm" : "bg-card border border-border rounded-bl-sm"}`}>
                   {msg.kind === "text" && <p className="text-sm leading-relaxed">{msg.body}</p>}
@@ -261,7 +262,6 @@ export default function MessagesPage() {
                 </div>
               </div>
             ))}
-            <div ref={bottomRef} />
           </div>
 
           {/* Frozen state — shown to SENDER when they hit the 3-message limit */}
