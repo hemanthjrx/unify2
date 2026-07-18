@@ -136,12 +136,10 @@ export default function UserProfilePage() {
 
             {!isMe && (
               <div className="flex items-center gap-2">
-                {/* Message button — only when following or accepted */}
-                {followStatus === "accepted" && (
-                  <Button variant="outline" size="sm" className="gap-2" onClick={() => navigate(`/messages/${username}`)}>
-                    <MessageCircle className="w-4 h-4" /> Message
-                  </Button>
-                )}
+                {/* Message button — visible to all users */}
+                <Button variant="outline" size="sm" className="gap-2" onClick={() => navigate(`/messages/${username}`)}>
+                  <MessageCircle className="w-4 h-4" /> Message
+                </Button>
 
                 {/* Follow button */}
                 {followStatus === "accepted" ? (

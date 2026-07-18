@@ -414,10 +414,22 @@ function QuestionDetail({ id }: { id: number }) {
   }
 
   async function markHelpful(replyId: number) {
+    // Optimistic update — immediately flip colour and increment count
+    setDetail((prev) => {
+      if (!prev) return prev;
+      return {
+        ...prev,
+        replies: prev.replies.map((r) =>
+          r.id === replyId
+            ? { ...r, hasVoted: true, helpfulCount: r.helpfulCount + 1, isHelpful: true }
+            : r
+        ),
+      };
+    });
     setHelpfulLoading(replyId);
     try {
-      const r = await afetch(`${BASE}/api/mentorship/${id}/replies/${replyId}/helpful`, { method: "POST" });
-      if (r.ok) load();
+      await afetch(`${BASE}/api/mentorship/${id}/replies/${replyId}/helpful`, { method: "POST" });
+      load();
     } finally {
       setHelpfulLoading(null);
     }
