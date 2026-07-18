@@ -53,6 +53,7 @@ export function SidebarLayout({ children }: { children: React.ReactNode }) {
   }, [afetch]);
 
   const navItems = [
+    { label: "Profile",         href: "/profile",         icon: UserIcon,      color: "#94a3b8", match: (l: string) => l === "/profile" },
     { label: "Dashboard",   href: "/dashboard",   icon: Home,          color: "#a78bfa", match: (l: string) => l === "/dashboard" || l === "/" },
     { label: "Discover",    href: "/discover",    icon: Compass,       color: "#34d399", match: (l: string) => l.startsWith("/discover") || l.startsWith("/users/") },
     { label: "Communities", href: "/communities", icon: Users,         color: "#60a5fa", match: (l: string) => l.startsWith("/communities") },
@@ -62,7 +63,6 @@ export function SidebarLayout({ children }: { children: React.ReactNode }) {
     { label: "Freelance",   href: "/freelance",   icon: Briefcase,     color: "#2dd4bf", match: (l: string) => l.startsWith("/freelance") },
     { label: "Mentorship",      href: "/mentorship",      icon: GraduationCap, color: "#c084fc", match: (l: string) => l.startsWith("/mentorship") },
     { label: "Announcements",   href: "/announcements",   icon: Megaphone,     color: "#f87171", match: (l: string) => l.startsWith("/announcements") },
-    { label: "Profile",         href: "/profile",         icon: UserIcon,      color: "#94a3b8", match: (l: string) => l === "/profile" },
   ];
 
   const isAdmin = profile?.role === "admin";
