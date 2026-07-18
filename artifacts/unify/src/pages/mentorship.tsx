@@ -19,6 +19,7 @@ import {
   Trash2,
   Send,
   X,
+  BookOpen,
 } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 
@@ -46,6 +47,8 @@ interface Reply {
   id: number;
   content: string;
   isHelpful: boolean;
+  helpfulCount: number;
+  hasVoted: boolean;
   createdAt: string;
   author: Author;
   isOwn: boolean;
@@ -82,7 +85,7 @@ function QuestionList() {
   const [tagInput, setTagInput] = useState("");
   const [tags, setTags] = useState<string[]>([]);
   const [submitting, setSubmitting] = useState(false);
-  const [filter, setFilter] = useState<"all" | "open" | "solved">("all");
+  const [filter, setFilter] = useState<"all" | "open" | "solved" | "mine">("all");
 
   async function load() {
     try {
@@ -109,6 +112,7 @@ function QuestionList() {
       if (r.ok) {
         setTitle(""); setBody(""); setTags([]); setTagInput("");
         setShowForm(false);
+        setFilter("mine");
         load();
       }
     } finally {
@@ -123,6 +127,13 @@ function QuestionList() {
     setQuestions((prev) => prev.filter((q) => q.id !== id));
   }
 
+  async function markSolved(id: number, e: React.MouseEvent) {
+    e.stopPropagation();
+    if (!confirm("Mark this question as solved?")) return;
+    const r = await afetch(`${BASE}/api/mentorship/${id}/solve`, { method: "POST" });
+    if (r.ok) setQuestions((prev) => prev.map((q) => q.id === id ? { ...q, isSolved: true } : q));
+  }
+
   function addTag() {
     const t = tagInput.trim().toLowerCase();
     if (t && !tags.includes(t) && tags.length < 5) {
@@ -131,11 +142,14 @@ function QuestionList() {
     setTagInput("");
   }
 
-  const filtered = questions.filter((q) => {
-    if (filter === "open") return !q.isSolved;
-    if (filter === "solved") return q.isSolved;
-    return true;
-  });
+  const myQuestions = questions.filter((q) => q.isOwn);
+  const filtered = filter === "mine"
+    ? myQuestions
+    : questions.filter((q) => {
+        if (filter === "open") return !q.isSolved;
+        if (filter === "solved") return q.isSolved;
+        return true;
+      });
 
   return (
     <div className="p-8 max-w-3xl mx-auto space-y-6">
@@ -203,11 +217,7 @@ function QuestionList() {
               )}
             </div>
             <div className="flex gap-2 pt-1">
-              <Button
-                onClick={submit}
-                disabled={submitting}
-                className="gap-2"
-              >
+              <Button onClick={submit} disabled={submitting} className="gap-2">
                 <Send className="w-3.5 h-3.5" /> Post Question
               </Button>
               <Button variant="ghost" onClick={() => { setShowForm(false); setTitle(""); setBody(""); setTags([]); }}>
@@ -219,7 +229,7 @@ function QuestionList() {
       )}
 
       {/* Filter tabs */}
-      <div className="flex gap-2">
+      <div className="flex gap-2 flex-wrap">
         {(["all", "open", "solved"] as const).map((f) => (
           <Button
             key={f}
@@ -231,13 +241,39 @@ function QuestionList() {
             {f}
           </Button>
         ))}
+        <Button
+          size="sm"
+          variant={filter === "mine" ? "default" : "outline"}
+          onClick={() => setFilter("mine")}
+          className="gap-1.5"
+        >
+          <BookOpen className="w-3.5 h-3.5" /> My Questions
+          {myQuestions.length > 0 && (
+            <span className="ml-0.5 bg-primary/20 text-primary text-[10px] font-semibold px-1.5 rounded-full">
+              {myQuestions.length}
+            </span>
+          )}
+        </Button>
       </div>
+
+      {/* My Questions empty state */}
+      {filter === "mine" && !loading && myQuestions.length === 0 && (
+        <Card className="bg-card border-card-border">
+          <CardContent className="py-12 text-center space-y-3">
+            <BookOpen className="w-8 h-8 text-muted-foreground mx-auto" />
+            <p className="text-sm text-muted-foreground">You have not asked any questions yet.</p>
+            <Button size="sm" onClick={() => setShowForm(true)} className="gap-2">
+              <Plus className="w-3.5 h-3.5" /> Ask your first question
+            </Button>
+          </CardContent>
+        </Card>
+      )}
 
       {/* List */}
       {loading && (
         <p className="text-sm text-muted-foreground py-12 text-center">Loading questions…</p>
       )}
-      {!loading && filtered.length === 0 && (
+      {!loading && filter !== "mine" && filtered.length === 0 && (
         <Card className="bg-card border-card-border">
           <CardContent className="py-12 text-center text-sm text-muted-foreground">
             No questions here yet. Be the first to ask!
@@ -266,7 +302,29 @@ function QuestionList() {
                         <CheckCircle className="w-3 h-3" /> Solved
                       </Badge>
                     )}
-                    {q.isOwn && (
+                    {/* My Questions actions */}
+                    {filter === "mine" && q.isOwn && (
+                      <div className="flex items-center gap-1" onClick={(e) => e.stopPropagation()}>
+                        {!q.isSolved && (
+                          <button
+                            className="p-1 text-muted-foreground hover:text-emerald-400 transition-colors rounded"
+                            title="Mark as solved"
+                            onClick={(e) => markSolved(q.id, e)}
+                          >
+                            <CheckCircle className="w-3.5 h-3.5" />
+                          </button>
+                        )}
+                        <button
+                          className="p-1 text-muted-foreground hover:text-destructive transition-colors rounded"
+                          title="Delete question"
+                          onClick={(e) => deleteQuestion(q.id, e)}
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+                    )}
+                    {/* Delete button outside My Questions tab too */}
+                    {filter !== "mine" && q.isOwn && (
                       <button
                         className="p-1 text-muted-foreground hover:text-destructive transition-colors rounded"
                         onClick={(e) => deleteQuestion(q.id, e)}
@@ -301,6 +359,13 @@ function QuestionList() {
                     @{q.author.username}
                   </button>
                 </div>
+
+                {/* My Questions — inline solve/status hint */}
+                {filter === "mine" && !q.isSolved && (
+                  <p className="mt-2 text-xs text-amber-400/80 flex items-center gap-1">
+                    <Clock className="w-3 h-3" /> Open — click the checkmark to mark as solved
+                  </p>
+                )}
               </div>
             </div>
           </CardContent>
@@ -318,7 +383,8 @@ function QuestionDetail({ id }: { id: number }) {
   const [loading, setLoading] = useState(true);
   const [replyText, setReplyText] = useState("");
   const [submitting, setSubmitting] = useState(false);
-  const [markingId, setMarkingId] = useState<number | null>(null);
+  const [helpfulLoading, setHelpfulLoading] = useState<number | null>(null);
+  const [solvingId, setSolvingId] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   async function load() {
@@ -348,12 +414,24 @@ function QuestionDetail({ id }: { id: number }) {
   }
 
   async function markHelpful(replyId: number) {
-    setMarkingId(replyId);
+    setHelpfulLoading(replyId);
     try {
       const r = await afetch(`${BASE}/api/mentorship/${id}/replies/${replyId}/helpful`, { method: "POST" });
       if (r.ok) load();
     } finally {
-      setMarkingId(null);
+      setHelpfulLoading(null);
+    }
+  }
+
+  async function markSolved() {
+    if (!detail || solvingId) return;
+    if (!confirm("Mark this question as solved?")) return;
+    setSolvingId(true);
+    try {
+      const r = await afetch(`${BASE}/api/mentorship/${id}/solve`, { method: "POST" });
+      if (r.ok) load();
+    } finally {
+      setSolvingId(false);
     }
   }
 
@@ -385,11 +463,23 @@ function QuestionDetail({ id }: { id: number }) {
         <CardContent className="p-6 space-y-4">
           <div className="flex items-start justify-between gap-3">
             <h1 className="text-xl font-bold leading-snug">{detail.title}</h1>
-            {detail.isSolved && (
-              <Badge className="bg-emerald-500/20 text-emerald-400 border-emerald-500/30 gap-1 shrink-0">
-                <CheckCircle className="w-3.5 h-3.5" /> Solved
-              </Badge>
-            )}
+            <div className="flex items-center gap-2 shrink-0">
+              {detail.isSolved ? (
+                <Badge className="bg-emerald-500/20 text-emerald-400 border-emerald-500/30 gap-1">
+                  <CheckCircle className="w-3.5 h-3.5" /> Solved
+                </Badge>
+              ) : detail.isOwn ? (
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="h-7 text-xs gap-1.5 border-emerald-500/50 text-emerald-400 hover:bg-emerald-500/10"
+                  onClick={markSolved}
+                  disabled={solvingId}
+                >
+                  <CheckCircle className="w-3 h-3" /> Mark as Solved
+                </Button>
+              ) : null}
+            </div>
           </div>
           <p className="text-sm leading-relaxed text-foreground/90 whitespace-pre-wrap">{detail.body}</p>
           {detail.tags.length > 0 && (
@@ -452,25 +542,59 @@ function QuestionDetail({ id }: { id: number }) {
                         {formatDistanceToNow(new Date(reply.createdAt), { addSuffix: true })}
                       </span>
                     </div>
-                    {reply.isHelpful ? (
-                      <Badge className="bg-emerald-500/20 text-emerald-400 border-emerald-500/30 gap-1 text-xs">
-                        <ThumbsUp className="w-3 h-3" /> Helpful · +2 coins
+                    {reply.isHelpful && (
+                      <Badge className="bg-emerald-500/20 text-emerald-400 border-emerald-500/30 gap-1 text-xs shrink-0">
+                        <ThumbsUp className="w-3 h-3" /> Helpful · {reply.helpfulCount}
                       </Badge>
-                    ) : (
-                      detail.isOwn && !detail.isSolved && !reply.isOwn && (
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          className="h-7 text-xs gap-1.5 border-emerald-500/50 text-emerald-400 hover:bg-emerald-500/10"
-                          onClick={() => markHelpful(reply.id)}
-                          disabled={markingId === reply.id}
-                        >
-                          <ThumbsUp className="w-3 h-3" /> Found it Helpful
-                        </Button>
-                      )
                     )}
                   </div>
+
                   <p className="text-sm leading-relaxed whitespace-pre-wrap">{reply.content}</p>
+
+                  {/* Action row: Helpful + Comment shortcut */}
+                  <div className="flex items-center gap-2 mt-3 pt-2 border-t border-border/30">
+                    {/* Helpful button — visible to all, disabled for own reply or already voted */}
+                    {!reply.isOwn ? (
+                      reply.hasVoted ? (
+                        <span className="flex items-center gap-1 text-xs text-emerald-400 font-medium">
+                          <ThumbsUp className="w-3.5 h-3.5 fill-current" />
+                          Helpful{reply.helpfulCount > 0 ? ` · ${reply.helpfulCount}` : ""}
+                        </span>
+                      ) : (
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          className="h-7 text-xs gap-1.5 text-muted-foreground hover:text-emerald-400 px-2"
+                          onClick={() => markHelpful(reply.id)}
+                          disabled={helpfulLoading === reply.id}
+                        >
+                          <ThumbsUp className="w-3.5 h-3.5" />
+                          Helpful{reply.helpfulCount > 0 ? ` · ${reply.helpfulCount}` : ""}
+                        </Button>
+                      )
+                    ) : (
+                      reply.helpfulCount > 0 && (
+                        <span className="flex items-center gap-1 text-xs text-muted-foreground">
+                          <ThumbsUp className="w-3.5 h-3.5" />
+                          {reply.helpfulCount} found this helpful
+                        </span>
+                      )
+                    )}
+
+                    {/* Reply shortcut */}
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      className="h-7 text-xs gap-1.5 text-muted-foreground hover:text-foreground px-2"
+                      onClick={() => {
+                        setReplyText(`@${reply.author.username} `);
+                        textareaRef.current?.focus();
+                      }}
+                    >
+                      <MessageSquare className="w-3.5 h-3.5" />
+                      Comment
+                    </Button>
+                  </div>
                 </div>
               </div>
             </CardContent>
@@ -478,51 +602,48 @@ function QuestionDetail({ id }: { id: number }) {
         ))}
       </div>
 
-      {/* Reply composer */}
-      {!detail.isSolved && (
-        <Card className="bg-card border-card-border">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-semibold">Post a reply</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            <Textarea
-              ref={textareaRef}
-              placeholder="Share your knowledge or experience… (min 10 characters)"
-              value={replyText}
-              onChange={(e) => setReplyText(e.target.value)}
-              rows={4}
-              maxLength={2000}
-              className="resize-none"
-              onKeyDown={(e) => {
-                if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) {
-                  e.preventDefault();
-                  submitReply();
-                }
-              }}
-            />
-            <div className="flex items-center justify-between">
-              <p className="text-xs text-muted-foreground">
-                You earn +3 coins for replying. If marked helpful, you earn +2 more!
-              </p>
-              <Button
-                onClick={submitReply}
-                disabled={submitting || replyText.trim().length < 10}
-                className="gap-2"
-              >
-                <Send className="w-3.5 h-3.5" /> Reply
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
-      )}
-
-      {detail.isSolved && (
-        <Card className="bg-card border-card-border border-emerald-500/30">
-          <CardContent className="py-4 text-center text-sm text-emerald-400 flex items-center justify-center gap-2">
-            <CheckCircle className="w-4 h-4" /> This question has been marked as solved.
-          </CardContent>
-        </Card>
-      )}
+      {/* Reply composer — always visible */}
+      <Card className="bg-card border-card-border">
+        <CardHeader className="pb-2">
+          <CardTitle className="text-sm font-semibold flex items-center gap-2">
+            Post a reply
+            {detail.isSolved && (
+              <Badge className="bg-emerald-500/20 text-emerald-400 border-emerald-500/30 text-[10px]">
+                <CheckCircle className="w-2.5 h-2.5 mr-1" /> Solved
+              </Badge>
+            )}
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          <Textarea
+            ref={textareaRef}
+            placeholder="Share your knowledge or experience… (min 10 characters)"
+            value={replyText}
+            onChange={(e) => setReplyText(e.target.value)}
+            rows={4}
+            maxLength={2000}
+            className="resize-none"
+            onKeyDown={(e) => {
+              if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) {
+                e.preventDefault();
+                submitReply();
+              }
+            }}
+          />
+          <div className="flex items-center justify-between">
+            <p className="text-xs text-muted-foreground">
+              +3 coins for replying · +2 more if marked helpful
+            </p>
+            <Button
+              onClick={submitReply}
+              disabled={submitting || replyText.trim().length < 10}
+              className="gap-2"
+            >
+              <Send className="w-3.5 h-3.5" /> Reply
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 }

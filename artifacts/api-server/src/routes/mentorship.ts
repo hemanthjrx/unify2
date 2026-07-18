@@ -3,6 +3,7 @@ import {
   db,
   mentorshipQuestionsTable,
   mentorshipRepliesTable,
+  mentorshipHelpfulVotesTable,
   usersTable,
 } from "@workspace/db";
 import { and, eq, sql, desc } from "drizzle-orm";
@@ -74,6 +75,7 @@ router.get("/mentorship/:id", withCurrentUser, async (req, res) => {
       id: mentorshipRepliesTable.id,
       content: mentorshipRepliesTable.content,
       isHelpful: mentorshipRepliesTable.isHelpful,
+      helpfulCount: mentorshipRepliesTable.helpfulCount,
       createdAt: mentorshipRepliesTable.createdAt,
       authorId: mentorshipRepliesTable.authorId,
       authorUsername: usersTable.username,
@@ -83,6 +85,13 @@ router.get("/mentorship/:id", withCurrentUser, async (req, res) => {
     .innerJoin(usersTable, eq(usersTable.id, mentorshipRepliesTable.authorId))
     .where(eq(mentorshipRepliesTable.questionId, id))
     .orderBy(mentorshipRepliesTable.createdAt);
+
+  // fetch which reply ids the current user has voted helpful
+  const myVotes = await db
+    .select({ replyId: mentorshipHelpfulVotesTable.replyId })
+    .from(mentorshipHelpfulVotesTable)
+    .where(eq(mentorshipHelpfulVotesTable.userId, req.currentUserId!));
+  const myVoteSet = new Set(myVotes.map((v) => v.replyId));
 
   res.json({
     id: q.id,
@@ -97,6 +106,8 @@ router.get("/mentorship/:id", withCurrentUser, async (req, res) => {
       id: r.id,
       content: r.content,
       isHelpful: r.isHelpful,
+      helpfulCount: r.helpfulCount,
+      hasVoted: myVoteSet.has(r.id),
       createdAt: r.createdAt.toISOString(),
       author: { id: r.authorId, username: r.authorUsername ?? "unknown", avatarColor: r.authorAvatarColor },
       isOwn: r.authorId === req.currentUserId!,
@@ -136,6 +147,19 @@ router.delete("/mentorship/:id", withCurrentUser, async (req, res) => {
   res.json({ ok: true });
 });
 
+// POST /api/mentorship/:id/solve — question owner marks their question as solved
+router.post("/mentorship/:id/solve", withCurrentUser, async (req, res) => {
+  const id = Number(req.params.id);
+  const [q] = await db
+    .select({ authorId: mentorshipQuestionsTable.authorId, isSolved: mentorshipQuestionsTable.isSolved })
+    .from(mentorshipQuestionsTable)
+    .where(eq(mentorshipQuestionsTable.id, id));
+  if (!q) { res.status(404).json({ error: "not_found" }); return; }
+  if (q.authorId !== req.currentUserId!) { res.status(403).json({ error: "forbidden" }); return; }
+  await db.update(mentorshipQuestionsTable).set({ isSolved: true }).where(eq(mentorshipQuestionsTable.id, id));
+  res.json({ ok: true });
+});
+
 const ReplyBody = z.object({ content: z.string().min(10).max(2000) });
 
 // POST /api/mentorship/:id/replies — post a reply
@@ -166,32 +190,51 @@ router.post("/mentorship/:id/replies", withCurrentUser, async (req, res) => {
   res.status(201).json({ id: created.id });
 });
 
-// POST /api/mentorship/:id/replies/:replyId/helpful — mark helpful (+5 coins to replier)
+// POST /api/mentorship/:id/replies/:replyId/helpful — any user can mark a reply as helpful
 router.post("/mentorship/:id/replies/:replyId/helpful", withCurrentUser, async (req, res) => {
   const questionId = Number(req.params.id);
   const replyId = Number(req.params.replyId);
 
   const [q] = await db
-    .select({ authorId: mentorshipQuestionsTable.authorId, isSolved: mentorshipQuestionsTable.isSolved })
+    .select({ authorId: mentorshipQuestionsTable.authorId })
     .from(mentorshipQuestionsTable)
     .where(eq(mentorshipQuestionsTable.id, questionId));
-
   if (!q) { res.status(404).json({ error: "not_found" }); return; }
-  if (q.authorId !== req.currentUserId!) { res.status(403).json({ error: "only_question_author" }); return; }
-  if (q.isSolved) { res.status(409).json({ error: "already_solved" }); return; }
 
   const [reply] = await db
     .select({ authorId: mentorshipRepliesTable.authorId })
     .from(mentorshipRepliesTable)
     .where(and(eq(mentorshipRepliesTable.id, replyId), eq(mentorshipRepliesTable.questionId, questionId)));
-
   if (!reply) { res.status(404).json({ error: "reply_not_found" }); return; }
 
-  // Mark reply as helpful
-  await db.update(mentorshipRepliesTable).set({ isHelpful: true }).where(eq(mentorshipRepliesTable.id, replyId));
-  // Mark question as solved
-  await db.update(mentorshipQuestionsTable).set({ isSolved: true }).where(eq(mentorshipQuestionsTable.id, questionId));
-  // Award +2 bonus coins to the replier for being marked helpful (if not own question)
+  // Cannot mark your own reply as helpful
+  if (reply.authorId === req.currentUserId!) {
+    res.status(403).json({ error: "cannot_vote_own_reply" });
+    return;
+  }
+
+  // Insert vote (ignore if already voted)
+  try {
+    await db.insert(mentorshipHelpfulVotesTable).values({
+      replyId,
+      userId: req.currentUserId!,
+    });
+  } catch {
+    // duplicate vote — already voted, silently ignore
+    res.json({ ok: true, alreadyVoted: true });
+    return;
+  }
+
+  // Increment helpful_count on the reply and mark isHelpful=true
+  await db
+    .update(mentorshipRepliesTable)
+    .set({
+      helpfulCount: sql`${mentorshipRepliesTable.helpfulCount} + 1`,
+      isHelpful: true,
+    })
+    .where(eq(mentorshipRepliesTable.id, replyId));
+
+  // Award +2 coins to replier (if different from voter)
   if (reply.authorId !== req.currentUserId!) {
     await db
       .update(usersTable)
