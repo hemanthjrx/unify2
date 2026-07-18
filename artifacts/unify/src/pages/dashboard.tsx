@@ -203,37 +203,43 @@ function StatCard({
   const inner = (
     <>
       <div className={`absolute inset-0 bg-gradient-to-br ${accent} opacity-60 pointer-events-none`} />
-      <div className="relative flex items-start justify-between">
-        <div>
-          <div className="text-xs uppercase tracking-widest text-muted-foreground">
-            {label}
+      <div className="relative flex items-start justify-between h-full">
+        <div className="flex flex-col justify-between h-full">
+          <div>
+            <div className="text-xs uppercase tracking-widest text-muted-foreground">
+              {label}
+            </div>
+            <div className="text-3xl font-bold mt-1 flex items-baseline gap-1">
+              {value.toLocaleString()}
+              {suffix && (
+                <span className="text-sm font-medium text-muted-foreground">
+                  {suffix}
+                </span>
+              )}
+            </div>
           </div>
-          <div className="text-3xl font-bold mt-1 flex items-baseline gap-1">
-            {value.toLocaleString()}
-            {suffix && (
-              <span className="text-sm font-medium text-muted-foreground">
-                {suffix}
-              </span>
+          <div className="h-4 mt-1">
+            {typeof delta === "number" && delta !== 0 && (
+              <div className="text-xs text-emerald-400 flex items-center gap-1">
+                +{delta} this week
+              </div>
             )}
           </div>
-          {typeof delta === "number" && delta !== 0 && (
-            <div className="text-xs text-emerald-400 mt-1 flex items-center gap-1">
-              +{delta} this week
-            </div>
-          )}
         </div>
-        <div className="p-2 rounded-lg bg-background/40 border border-border/40">
+        <div className="p-2 rounded-lg bg-background/40 border border-border/40 flex-shrink-0">
           {icon}
         </div>
       </div>
     </>
   );
 
+  const sharedClass = "relative overflow-hidden rounded-xl border border-card-border bg-card p-5 h-28 flex flex-col";
+
   if (href) {
     return (
       <Link href={href}>
         <div
-          className="relative overflow-hidden rounded-xl border border-card-border bg-card p-5 cursor-pointer hover:border-primary/40 hover:shadow-md transition-all"
+          className={`${sharedClass} cursor-pointer hover:border-primary/40 hover:shadow-md transition-all`}
           data-testid={testId}
         >
           {inner}
@@ -244,7 +250,7 @@ function StatCard({
 
   return (
     <div
-      className="relative overflow-hidden rounded-xl border border-card-border bg-card p-5"
+      className={sharedClass}
       data-testid={testId}
     >
       {inner}

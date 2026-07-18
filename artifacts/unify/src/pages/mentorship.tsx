@@ -414,7 +414,7 @@ function QuestionDetail({ id }: { id: number }) {
   }
 
   async function markHelpful(replyId: number) {
-    // Optimistic update — immediately flip colour and increment count
+    // Optimistic update — immediately flip colour and increment count, no reload
     setDetail((prev) => {
       if (!prev) return prev;
       return {
@@ -429,7 +429,6 @@ function QuestionDetail({ id }: { id: number }) {
     setHelpfulLoading(replyId);
     try {
       await afetch(`${BASE}/api/mentorship/${id}/replies/${replyId}/helpful`, { method: "POST" });
-      load();
     } finally {
       setHelpfulLoading(null);
     }
@@ -568,9 +567,9 @@ function QuestionDetail({ id }: { id: number }) {
                     {/* Helpful button — visible to all, disabled for own reply or already voted */}
                     {!reply.isOwn ? (
                       reply.hasVoted ? (
-                        <span className="flex items-center gap-1 text-xs text-emerald-400 font-medium">
-                          <ThumbsUp className="w-3.5 h-3.5 fill-current" />
-                          Helpful{reply.helpfulCount > 0 ? ` · ${reply.helpfulCount}` : ""}
+                        <span className="flex items-center gap-1.5 text-xs text-emerald-400 font-semibold px-2 py-1">
+                          <ThumbsUp className="w-3.5 h-3.5 fill-emerald-400" />
+                          {reply.helpfulCount}
                         </span>
                       ) : (
                         <Button
@@ -581,16 +580,14 @@ function QuestionDetail({ id }: { id: number }) {
                           disabled={helpfulLoading === reply.id}
                         >
                           <ThumbsUp className="w-3.5 h-3.5" />
-                          Helpful{reply.helpfulCount > 0 ? ` · ${reply.helpfulCount}` : ""}
+                          {reply.helpfulCount}
                         </Button>
                       )
                     ) : (
-                      reply.helpfulCount > 0 && (
-                        <span className="flex items-center gap-1 text-xs text-muted-foreground">
-                          <ThumbsUp className="w-3.5 h-3.5" />
-                          {reply.helpfulCount} found this helpful
-                        </span>
-                      )
+                      <span className="flex items-center gap-1.5 text-xs text-muted-foreground px-2 py-1">
+                        <ThumbsUp className={`w-3.5 h-3.5 ${reply.helpfulCount > 0 ? "text-emerald-400" : ""}`} />
+                        {reply.helpfulCount}
+                      </span>
                     )}
 
                     {/* Reply shortcut */}
