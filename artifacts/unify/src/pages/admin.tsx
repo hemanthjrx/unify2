@@ -164,6 +164,8 @@ type Report = {
   reviewedAt: string | null;
   createdAt: string;
   reporterUsername: string | null;
+  reportedUserId: number | null;
+  reportedUsername: string | null;
 };
 
 const BAN_OPTIONS = [
@@ -1858,6 +1860,7 @@ function ReportsTab({ isAdmin }: { isAdmin: boolean }) {
   const [reviewTarget, setReviewTarget] = useState<Report | null>(null);
   const [reviewNote, setReviewNote] = useState("");
   const [reviewStatus, setReviewStatus] = useState<"reviewed" | "dismissed">("reviewed");
+  const [showWarnBan, setShowWarnBan] = useState(false);
 
   const { data: reports = [], isLoading } = useQuery<Report[]>({
     queryKey: ["admin", "reports"],
@@ -1871,6 +1874,16 @@ function ReportsTab({ isAdmin }: { isAdmin: boolean }) {
       qc.invalidateQueries({ queryKey: ["admin", "reports"] });
       setReviewTarget(null);
       setReviewNote("");
+      setShowWarnBan(false);
+    },
+  });
+
+  const banMutation = useMutation({
+    mutationFn: ({ id, isBanned, banDuration }: { id: number; isBanned: boolean; banDuration?: string }) =>
+      api.patch(`/admin/users/${id}`, { isBanned, ...(banDuration ? { banDuration } : {}) }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["admin", "reports"] });
+      setShowWarnBan(false);
     },
   });
 
@@ -1913,24 +1926,62 @@ function ReportsTab({ isAdmin }: { isAdmin: boolean }) {
 
   return (
     <div className="space-y-4">
-      {reviewTarget && (
+      {/* Warn/Ban overlay — shown on top of the review modal */}
+      {reviewTarget && showWarnBan && reviewTarget.reportedUserId && reviewTarget.reportedUsername && (
+        <WarningBanModal
+          userId={reviewTarget.reportedUserId}
+          username={reviewTarget.reportedUsername}
+          onWarnSuccess={() => { setShowWarnBan(false); qc.invalidateQueries({ queryKey: ["admin", "reports"] }); }}
+          onBanConfirm={(duration) => banMutation.mutate({ id: reviewTarget.reportedUserId!, isBanned: true, banDuration: duration })}
+          onCancel={() => setShowWarnBan(false)}
+        />
+      )}
+
+      {reviewTarget && !showWarnBan && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
-          <div className="bg-card border border-border rounded-xl shadow-2xl w-full max-w-sm p-6 space-y-4">
+          <div className="bg-card border border-border rounded-xl shadow-2xl w-full max-w-md p-6 space-y-4 max-h-[90vh] overflow-y-auto">
             <div className="flex items-start justify-between gap-2">
               <div className="font-bold text-base flex items-center gap-2">
                 <Flag className="w-4 h-4 text-yellow-400" />
                 Review Report #{reviewTarget.id}
               </div>
-              <button onClick={() => { setReviewTarget(null); setReviewNote(""); }}>
+              <button onClick={() => { setReviewTarget(null); setReviewNote(""); setShowWarnBan(false); }}>
                 <X className="w-4 h-4 text-muted-foreground" />
               </button>
             </div>
-            <div className="space-y-1 text-xs text-muted-foreground">
+
+            {/* Report details */}
+            <div className="space-y-1 text-xs text-muted-foreground bg-secondary/40 rounded-lg p-3">
               <div><span className="text-foreground font-medium">Type: </span>{reviewTarget.targetType}</div>
               {reviewTarget.targetId && <div><span className="text-foreground font-medium">Target ID: </span>#{reviewTarget.targetId}</div>}
               {reviewTarget.targetUsn && <div><span className="text-foreground font-medium">USN: </span>{reviewTarget.targetUsn}</div>}
+              {reviewTarget.reportedUsername && (
+                <div><span className="text-foreground font-medium">Reported User: </span>@{reviewTarget.reportedUsername}</div>
+              )}
               <div className="pt-1"><span className="text-foreground font-medium">Description: </span>{reviewTarget.description}</div>
             </div>
+
+            {/* Warn / Ban student button — only if there's a linked user */}
+            {reviewTarget.reportedUserId && reviewTarget.reportedUsername && (
+              <div className="border border-yellow-500/20 rounded-xl p-3 bg-yellow-500/5">
+                <div className="text-xs text-yellow-400 font-semibold mb-2 flex items-center gap-1.5">
+                  <AlertTriangle className="w-3.5 h-3.5" /> Student Actions
+                </div>
+                <p className="text-xs text-muted-foreground mb-3">
+                  Take moderation action against <span className="text-foreground font-medium">@{reviewTarget.reportedUsername}</span> directly from this report.
+                </p>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="w-full gap-2 border-yellow-500/30 text-yellow-400 hover:bg-yellow-500/10"
+                  onClick={() => setShowWarnBan(true)}
+                >
+                  <AlertTriangle className="w-3.5 h-3.5" /> Warn / Ban Student
+                </Button>
+              </div>
+            )}
+
+            {/* Resolution */}
             <div className="flex gap-2">
               {(["reviewed", "dismissed"] as const).map((s) => (
                 <button
@@ -1956,7 +2007,7 @@ function ReportsTab({ isAdmin }: { isAdmin: boolean }) {
               maxLength={500}
             />
             <div className="flex gap-2">
-              <Button variant="ghost" size="sm" className="flex-1" onClick={() => { setReviewTarget(null); setReviewNote(""); }}>
+              <Button variant="ghost" size="sm" className="flex-1" onClick={() => { setReviewTarget(null); setReviewNote(""); setShowWarnBan(false); }}>
                 Cancel
               </Button>
               <Button

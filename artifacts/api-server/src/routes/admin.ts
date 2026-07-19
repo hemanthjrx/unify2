@@ -297,6 +297,11 @@ router.get("/admin/reports", withModeratorOrAdmin, async (req, res) => {
     .from(usersTable)
     .as("reporter_user");
 
+  const reportedAlias = db
+    .select({ id: usersTable.id, username: usersTable.username, usn: usersTable.usn })
+    .from(usersTable)
+    .as("reported_user");
+
   const rows = await db
     .select({
       id: reportsTable.id,
@@ -309,9 +314,12 @@ router.get("/admin/reports", withModeratorOrAdmin, async (req, res) => {
       reviewedAt: reportsTable.reviewedAt,
       createdAt: reportsTable.createdAt,
       reporterUsername: reporterAlias.username,
+      reportedUserId: reportedAlias.id,
+      reportedUsername: reportedAlias.username,
     })
     .from(reportsTable)
     .leftJoin(reporterAlias, eq(reporterAlias.id, reportsTable.reporterId))
+    .leftJoin(reportedAlias, eq(reportedAlias.usn, reportsTable.targetUsn))
     .orderBy(desc(reportsTable.createdAt));
 
   const filtered = search
