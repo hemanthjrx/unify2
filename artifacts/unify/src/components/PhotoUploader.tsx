@@ -40,21 +40,15 @@ export function PhotoUploader({
     try {
       const uploaded: UploadedPhoto[] = [];
       for (const file of selected) {
-        const urlRes = await afetch(`${BASE}/api/storage/uploads/request-url`, {
+        const formData = new FormData();
+        formData.append("file", file);
+        const res = await afetch(`${BASE}/api/uploads/image`, {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ name: file.name, size: file.size, contentType: file.type }),
+          body: formData,
         });
-        if (!urlRes.ok) throw new Error("Failed to get upload URL");
-        const { uploadURL, objectPath } = await urlRes.json();
-        const putRes = await fetch(uploadURL, {
-          method: "PUT",
-          headers: { "Content-Type": file.type },
-          body: file,
-        });
-        if (!putRes.ok) throw new Error("Upload failed");
-        const previewUrl = `${BASE}/api/storage${objectPath}`;
-        uploaded.push({ objectPath, previewUrl, name: file.name });
+        if (!res.ok) throw new Error("Upload failed");
+        const { url } = await res.json();
+        uploaded.push({ objectPath: url, previewUrl: `${BASE}${url}`, name: file.name });
       }
       onChange([...value, ...uploaded]);
     } catch {
@@ -125,4 +119,3 @@ export function PhotoUploader({
     </div>
   );
 }
-

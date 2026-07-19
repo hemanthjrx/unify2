@@ -437,8 +437,8 @@ router.post("/admin/communities", withAdminUser, async (req, res) => {
     description: z.string().min(1).max(500),
     accentColor: z.string().default("#7c5cff"),
     tags: z.array(z.string()).default([]),
-    bannerImageUrl: z.string().url().optional().nullable(),
-    profileImageUrl: z.string().url().optional().nullable(),
+    bannerImageUrl: z.string().optional().nullable(),
+    profileImageUrl: z.string().optional().nullable(),
     leaderId: z.number().int().positive().optional().nullable(),
   }).parse(req.body);
 
@@ -481,8 +481,8 @@ router.patch("/admin/communities/:id", withAdminUser, async (req, res) => {
     description: z.string().min(1).max(500).optional(),
     accentColor: z.string().optional(),
     tags: z.array(z.string()).optional(),
-    bannerImageUrl: z.string().url().optional().nullable(),
-    profileImageUrl: z.string().url().optional().nullable(),
+    bannerImageUrl: z.string().optional().nullable(),
+    profileImageUrl: z.string().optional().nullable(),
     leaderId: z.number().int().positive().optional().nullable(),
   }).parse(req.body);
 

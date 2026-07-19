@@ -874,16 +874,15 @@ function SingleImageUploader({
     if (file.size > 10 * 1024 * 1024) { setErr("Max 10 MB"); return; }
     setErr(null); setUploading(true);
     try {
-      const urlRes = await authFetch(`${BASE}/api/storage/uploads/request-url`, {
+      const formData = new FormData();
+      formData.append("file", file);
+      const res = await authFetch(`${BASE}/api/uploads/image`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name: file.name, size: file.size, contentType: file.type }),
+        body: formData,
       });
-      if (!urlRes.ok) throw new Error();
-      const { uploadURL, objectPath } = await urlRes.json();
-      const putRes = await fetch(uploadURL, { method: "PUT", headers: { "Content-Type": file.type }, body: file });
-      if (!putRes.ok) throw new Error();
-      onChange(`${BASE}/api/storage${objectPath}`);
+      if (!res.ok) throw new Error();
+      const { url } = await res.json();
+      onChange(`${BASE}${url}`);
     } catch { setErr("Upload failed"); } finally { setUploading(false); if (inputRef.current) inputRef.current.value = ""; }
   }
 

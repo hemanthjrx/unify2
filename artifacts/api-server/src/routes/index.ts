@@ -18,6 +18,7 @@ import hackathonsRouter from "./hackathons";
 import mentorshipRouter from "./mentorship";
 import announcementsRouter from "./announcements";
 import storageRouter from "./storage";
+import imageUploadRouter from "./imageUpload";
 
 const router: IRouter = Router();
 
@@ -40,5 +41,6 @@ router.use(hackathonsRouter);
 router.use(mentorshipRouter);
 router.use(announcementsRouter);
 router.use(storageRouter);
+router.use(imageUploadRouter);
 
 export default router;
