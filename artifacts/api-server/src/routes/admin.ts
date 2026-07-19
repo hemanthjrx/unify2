@@ -64,7 +64,7 @@ router.get("/admin/users", withAdminUser, async (req, res) => {
   res.json(users);
 });
 
-router.get("/admin/users/search", withAdminUser, async (req, res) => {
+router.get("/admin/users/search", withModeratorOrAdmin, async (req, res) => {
   const q = String(req.query.q || "").trim();
   if (!q) { res.json([]); return; }
   const rows = await db

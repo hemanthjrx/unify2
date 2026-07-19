@@ -927,9 +927,10 @@ function CommunityEditPanel({ community, onClose }: { community: Community; onCl
     leaderId: community.leaderId ?? null as number | null,
     leaderUsername: community.leaderUsername ?? null as string | null,
   });
-  const [leaderSearch, setLeaderSearch] = useState(community.leaderUsername ?? "");
+  const [leaderSearch, setLeaderSearch] = useState("");
   const [leaderResults, setLeaderResults] = useState<{ id: number; username: string; usn: string | null; name: string | null; avatarColor: string }[]>([]);
-  const [leaderDropdown, setLeaderDropdown] = useState(false);
+  const [leaderSearching, setLeaderSearching] = useState(false);
+  const [leaderPreview, setLeaderPreview] = useState<{ id: number; username: string; usn: string | null; name: string | null; avatarColor: string } | null>(null);
 
   const { data: members = [], isLoading: membersLoading } = useQuery<CommunityMember[]>({
     queryKey: ["admin", "community-members", community.id],
@@ -938,25 +939,28 @@ function CommunityEditPanel({ community, onClose }: { community: Community; onCl
 
   async function searchLeader(q: string) {
     setLeaderSearch(q);
-    if (!q.trim()) { setLeaderResults([]); setLeaderDropdown(false); return; }
+    if (!q.trim()) { setLeaderResults([]); return; }
+    setLeaderSearching(true);
     try {
       const results = await api.get(`/admin/users/search?q=${encodeURIComponent(q.trim())}`);
       setLeaderResults(results);
-      setLeaderDropdown(true);
     } catch { setLeaderResults([]); }
+    finally { setLeaderSearching(false); }
   }
 
-  function selectLeader(u: { id: number; username: string }) {
-    setForm((f) => ({ ...f, leaderId: u.id, leaderUsername: u.username }));
-    setLeaderSearch(u.username);
-    setLeaderDropdown(false);
+  function confirmLeader() {
+    if (!leaderPreview) return;
+    setForm((f) => ({ ...f, leaderId: leaderPreview.id, leaderUsername: leaderPreview.username }));
+    setLeaderPreview(null);
+    setLeaderSearch("");
+    setLeaderResults([]);
   }
 
   function clearLeader() {
     setForm((f) => ({ ...f, leaderId: null, leaderUsername: null }));
     setLeaderSearch("");
     setLeaderResults([]);
-    setLeaderDropdown(false);
+    setLeaderPreview(null);
   }
 
   const updateMutation = useMutation({
@@ -1011,54 +1015,107 @@ function CommunityEditPanel({ community, onClose }: { community: Community; onCl
             <Label className="text-xs">Description</Label>
             <Textarea value={form.description} onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))} rows={2} />
           </div>
-          <div className="space-y-1">
+          <div className="space-y-2">
             <Label className="text-xs">Community Leader</Label>
-            <div className="relative">
-              <div className="flex gap-2">
-                <div className="relative flex-1">
-                  <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
-                  <Input
-                    placeholder="Search by name, username or USN…"
-                    value={leaderSearch}
-                    onChange={(e) => searchLeader(e.target.value)}
-                    onFocus={() => leaderResults.length > 0 && setLeaderDropdown(true)}
-                    className="pl-8 text-sm h-9"
-                  />
+
+            {/* Profile preview modal */}
+            {leaderPreview && (
+              <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+                <div className="bg-card border border-card-border rounded-xl shadow-2xl w-full max-w-xs p-6 space-y-4">
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="font-bold text-sm flex items-center gap-2">
+                      <UserCheck className="w-4 h-4 text-primary" /> Assign Community Leader
+                    </div>
+                    <button onClick={() => setLeaderPreview(null)}><X className="w-4 h-4 text-muted-foreground" /></button>
+                  </div>
+                  <div className="flex flex-col items-center gap-3 py-2">
+                    <Avatar className="w-16 h-16">
+                      <AvatarFallback style={{ backgroundColor: leaderPreview.avatarColor }} className="text-white text-2xl font-bold">
+                        {leaderPreview.username[0]?.toUpperCase()}
+                      </AvatarFallback>
+                    </Avatar>
+                    <div className="text-center">
+                      <div className="font-semibold text-base">@{leaderPreview.username}</div>
+                      {leaderPreview.name && <div className="text-sm text-muted-foreground">{leaderPreview.name}</div>}
+                      {leaderPreview.usn && <div className="text-xs text-muted-foreground mt-0.5">USN: {leaderPreview.usn}</div>}
+                    </div>
+                  </div>
+                  <div className="flex gap-2">
+                    <Button type="button" variant="ghost" size="sm" className="flex-1" onClick={() => setLeaderPreview(null)}>
+                      Cancel
+                    </Button>
+                    <Button type="button" size="sm" className="flex-1 gap-1.5" onClick={confirmLeader}>
+                      <UserCheck className="w-3.5 h-3.5" /> Confirm Selection
+                    </Button>
+                  </div>
                 </div>
-                {form.leaderId && (
-                  <Button type="button" variant="ghost" size="sm" className="h-9 px-2 text-muted-foreground hover:text-destructive" onClick={clearLeader}>
-                    <X className="w-4 h-4" />
-                  </Button>
-                )}
               </div>
-              {leaderDropdown && leaderResults.length > 0 && (
-                <div className="absolute z-20 mt-1 w-full rounded-lg border border-border bg-card shadow-xl overflow-hidden">
-                  {leaderResults.map((u) => (
-                    <button
-                      key={u.id}
-                      type="button"
-                      onClick={() => selectLeader(u)}
-                      className="w-full flex items-center gap-2.5 px-3 py-2 hover:bg-secondary/60 transition-colors text-left"
-                    >
-                      <Avatar className="w-6 h-6 flex-shrink-0">
-                        <AvatarFallback style={{ backgroundColor: u.avatarColor }} className="text-white text-[10px] font-bold">
-                          {u.username[0]?.toUpperCase()}
-                        </AvatarFallback>
-                      </Avatar>
-                      <div className="min-w-0">
-                        <div className="text-sm font-medium truncate">@{u.username}</div>
-                        {u.usn && <div className="text-xs text-muted-foreground">{u.usn}</div>}
-                      </div>
-                    </button>
-                  ))}
+            )}
+
+            {/* Current leader badge */}
+            {form.leaderId && (
+              <div className="flex items-center justify-between gap-2 px-3 py-2 rounded-lg bg-emerald-500/10 border border-emerald-500/20">
+                <div className="flex items-center gap-2">
+                  <UserCheck className="w-3.5 h-3.5 text-emerald-400" />
+                  <span className="text-xs text-emerald-400 font-medium">@{form.leaderUsername}</span>
                 </div>
+                <button type="button" onClick={clearLeader} className="text-muted-foreground hover:text-destructive transition-colors">
+                  <X className="w-3.5 h-3.5" />
+                </button>
+              </div>
+            )}
+
+            {/* Search input */}
+            <div className="relative">
+              <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
+              <Input
+                placeholder="Search by name, username or USN…"
+                value={leaderSearch}
+                onChange={(e) => searchLeader(e.target.value)}
+                className="pl-8 text-sm h-9"
+              />
+              {leaderSearching && (
+                <div className="absolute right-2.5 top-1/2 -translate-y-1/2 text-xs text-muted-foreground">…</div>
               )}
             </div>
-            {form.leaderId && (
-              <p className="text-xs text-emerald-400">✓ Leader set to @{form.leaderUsername}</p>
+
+            {/* Results list */}
+            {leaderResults.length > 0 && (
+              <div className="rounded-lg border border-border bg-card overflow-hidden">
+                {leaderResults.map((u) => (
+                  <div key={u.id} className="flex items-center gap-2.5 px-3 py-2 border-b border-border/50 last:border-0 hover:bg-secondary/40 transition-colors">
+                    <Avatar className="w-7 h-7 flex-shrink-0">
+                      <AvatarFallback style={{ backgroundColor: u.avatarColor }} className="text-white text-xs font-bold">
+                        {u.username[0]?.toUpperCase()}
+                      </AvatarFallback>
+                    </Avatar>
+                    <div className="min-w-0 flex-1">
+                      <div className="text-sm font-medium truncate">@{u.username}</div>
+                      {(u.name || u.usn) && (
+                        <div className="text-xs text-muted-foreground truncate">
+                          {u.name}{u.name && u.usn ? " · " : ""}{u.usn}
+                        </div>
+                      )}
+                    </div>
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="outline"
+                      className="h-7 px-2.5 text-xs flex-shrink-0"
+                      onClick={() => setLeaderPreview(u)}
+                    >
+                      Select
+                    </Button>
+                  </div>
+                ))}
+              </div>
             )}
-            {!form.leaderId && (
-              <p className="text-xs text-muted-foreground">No leader assigned. Search to assign one.</p>
+
+            {leaderSearch.trim() && !leaderSearching && leaderResults.length === 0 && (
+              <p className="text-xs text-muted-foreground">No students found for "{leaderSearch}".</p>
+            )}
+            {!form.leaderId && !leaderSearch && (
+              <p className="text-xs text-muted-foreground">No leader assigned. Search above to assign one.</p>
             )}
           </div>
           <div className="grid grid-cols-2 gap-3">
