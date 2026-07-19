@@ -1,0 +1,308 @@
+Create a dedicated hardcoded dataset (such as `src/data/students.ts`, `src/data/users.ts`, or `src/data/demoUsers.ts`) that acts as the **single source of truth** for every user in the application.
+
+Do not use any APIs, databases, random data generation, or mock services. Every user must be permanently hardcoded into the project and reused across all features.
+
+# Student Dataset
+
+Generate **exactly 160 students**, distributed equally across all engineering departments.
+
+Each department must contain **exactly 20 students**.
+
+Each student record must include:
+
+- USN
+- Full Name
+- Username
+- Password
+- Email Address
+- Department
+- Semester
+- Year
+- Role
+- Avatar/Image Path (leave empty or use the existing placeholder/avatar system)
+
+All students are:
+
+- Semester: 1
+- Year: 1st Year
+- Role: Student
+- College: East West Institute of Technology (EWIT)
+
+---
+
+# Departments & USN Format
+
+The department must always match the USN prefix.
+
+| Department | USN Range |
+|------------|-----------|
+| Artificial Intelligence & Machine Learning | 1EW25AI001 → 1EW25AI020 |
+| Computer Science & Engineering | 1EW25CS001 → 1EW25CS020 |
+| Information Science & Engineering | 1EW25IS001 → 1EW25IS020 |
+| IoT, Cybersecurity including Blockchain Technology | 1EW25IC001 → 1EW25IC020 |
+| Electronics & Communication Engineering | 1EW25EC001 → 1EW25EC020 |
+| Electrical & Electronics Engineering | 1EW25EE001 → 1EW25EE020 |
+| Mechanical Engineering | 1EW25ME001 → 1EW25ME020 |
+| Civil Engineering | 1EW25CE001 → 1EW25CE020 |
+
+Generate exactly **20 students** for every department.
+
+Total students:
+
+**160**
+
+Never assign a department that doesn't match its USN.
+
+Examples:
+
+- 1EW25IC008 → IoT, Cybersecurity including Blockchain Technology
+- 1EW25CS014 → Computer Science & Engineering
+- 1EW25AI019 → Artificial Intelligence & Machine Learning
+
+---
+
+# Special Student
+
+Create this student exactly as specified.
+
+USN
+
+1EW25IC020
+
+Name
+
+Hemanth J R
+
+Username
+
+oghemz
+
+Password
+
+Student123
+
+Email
+
+oghemz@ewit.edu
+
+Department
+
+IoT, Cybersecurity including Blockchain Technology
+
+Semester
+
+1
+
+Year
+
+1st Year
+
+Role
+
+Student
+
+---
+
+# Student Names
+
+Generate realistic Indian student names.
+
+Requirements:
+
+- Balanced male and female students
+- Diverse names from different Indian states
+- No repeated names
+- No placeholder names
+- No copied college class lists
+- Names should feel authentic for an engineering college
+
+---
+
+# Usernames
+
+Every student username must:
+
+- be completely lowercase
+- be unique
+- look realistic
+- be memorable
+
+Use a mixture of styles:
+
+- Tech-inspired
+- Gamer-style
+- Creative
+- Minimal
+- Word-based
+- Random combinations
+
+Examples of style only:
+
+- ghostwriter
+- wordcrafter
+- pixelpilot
+- raven404
+- apexwolf
+- echoverse
+- skyline
+- turbox
+- blaze
+- drift
+- velocity
+- nebulasync
+- redbull
+- codevibe
+- alphasync
+
+Do NOT simply append numbers to every username.
+
+---
+
+# Passwords
+
+Every student account must use the same password.
+
+Password:
+
+Student123
+
+Requirements:
+
+- Capital S
+- Remaining letters lowercase
+- Ends with 123
+
+Every student uses this password.
+
+---
+
+# Email Addresses
+
+Generate email addresses using the username.
+
+Example
+
+username@ewit.edu
+
+Every email must be unique.
+
+---
+
+# System Accounts
+
+Also create the following permanent system users.
+
+These users are NOT part of the 160 students.
+
+## Administrator
+
+Name
+
+Administrator
+
+Username
+
+ADMIN
+
+Password
+
+admin123
+
+Role
+
+Admin
+
+Email
+
+admin@ewit.edu
+
+---
+
+## Moderator
+
+Name
+
+Moderator
+
+Username
+
+MODERATOR
+
+Password
+
+mod123
+
+Role
+
+Moderator
+
+Email
+
+moderator@ewit.edu
+
+---
+
+# Hardcoding Rules
+
+- Hardcode every user into the project.
+- Do NOT fetch users from any API.
+- Do NOT use a database for demo users.
+- Do NOT generate users dynamically.
+- Store everything inside reusable data files.
+- The data must persist after downloading, exporting, or moving the project.
+- Every module must reference this single dataset.
+- Never duplicate user records.
+
+---
+
+# Integration Rules
+
+Use ONLY these users throughout the application.
+
+Do NOT create additional random users unless absolutely necessary.
+
+These users should populate:
+
+- Community members
+- Community moderators
+- Community owners
+- Marketplace sellers
+- Marketplace buyers
+- Freelancers
+- Mentorship authors
+- Mentorship replies
+- Hackathon participants
+- Hackathon organizers (where appropriate)
+- Announcement authors
+- Discussion authors
+- Discussion replies
+- Comments
+- Likes
+- User profiles
+- Notifications
+- Activity feeds
+- Dashboard statistics
+- Leaderboards
+- Sample chat users
+- Sample followers/following
+- Any other feature requiring users
+
+The Admin account should be used wherever administrative functionality is required.
+
+The Moderator account should be used wherever moderation functionality is required.
+
+Students should only use student accounts.
+
+---
+
+# Data Quality Requirements
+
+- Every student must have a unique identity.
+- Every USN must be unique.
+- Every username must be unique.
+- Every email must be unique.
+- Every profile should feel realistic.
+- Distribute names naturally across all departments.
+- Ensure the entire application references this single hardcoded dataset to maintain consistency.
+
+This dataset should become the **master user dataset** for the entire project and serve as the single source of truth for all demo users.

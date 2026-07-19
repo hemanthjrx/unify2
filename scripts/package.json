@@ -15,6 +15,7 @@
     "seed-content": "tsx ./src/seed-content.ts",
     "seed-usernames": "tsx ./src/seed-usernames.ts",
     "create-test-account": "tsx ./src/create-test-account.ts",
+    "reset-seed": "tsx ./src/reset-seed.ts",
     "typecheck": "tsc -p tsconfig.json --noEmit"
   },
   "dependencies": {

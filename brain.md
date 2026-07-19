@@ -519,6 +519,7 @@ const res = await fetch("/api/some-endpoint", { method: "POST", body: ... });
 - [x] Private accounts + follow request flow
 - [x] Coin system + leaderboard
 - [x] Auto-seed on first boot
+- [x] Hardcoded 160-student EWIT dataset (see `artifacts/api-server/src/data/students.ts`)
 - [ ] `CLERK_SECRET_KEY` requested but unused — either wire Clerk or remove the dependency
 - [ ] File uploads go to `/tmp` (ephemeral) — consider migrating to Replit Object Storage for persistence
 

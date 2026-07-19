@@ -1,7 +1,8 @@
 /**
  * auto-seed.ts
- * Runs once on first server launch to populate the DB with realistic demo data.
- * Safe to re-run — checks for the "CyberKnight" marker user before inserting.
+ * Runs once on first server launch to populate the DB with EWIT demo data.
+ * Safe to re-run — checks for the "oghemz" marker user before inserting.
+ * Source of truth: src/data/students.ts (160 hardcoded students + system accounts)
  */
 
 import bcrypt from "bcrypt";
@@ -16,314 +17,12 @@ import {
   mentorshipRepliesTable,
 } from "@workspace/db";
 import { eq, inArray } from "drizzle-orm";
-
-const SEED_MARKER = "CyberKnight";
+import { ALL_STUDENTS, SYSTEM_ACCOUNTS, SEED_MARKER_USERNAME } from "./data/students.js";
 
 // ─────────────────────────────────────────────
-// NAMED DEMO USERS (25)
+// (NAMED_USERS replaced by hardcoded dataset)
+// See src/data/students.ts for all 160 students.
 // ─────────────────────────────────────────────
-const NAMED_USERS = [
-  {
-    username: "CyberKnight",
-    name: "Arjun Mehta",
-    branch: "CSE",
-    semester: "6",
-    college: "Bangalore Institute of Technology",
-    bio: "Cybersecurity enthusiast and CTF player. Cracked 3 CVEs this semester.",
-    skills: ["Python", "Linux", "Wireshark", "Kali Linux", "Burp Suite"],
-    avatarColor: "#7c5cff",
-    linkedinUrl: "https://linkedin.com/in/arjunmehta",
-    githubUrl: "https://github.com/arjunmehta",
-  },
-  {
-    username: "CodingHero",
-    name: "Priya Sharma",
-    branch: "ISE",
-    semester: "4",
-    college: "RV College of Engineering",
-    bio: "Full-stack developer who loves building products from scratch. Open-source contributor.",
-    skills: ["React", "Node.js", "TypeScript", "PostgreSQL", "Docker"],
-    avatarColor: "#e85d75",
-    linkedinUrl: "https://linkedin.com/in/priyasharma",
-    githubUrl: "https://github.com/priyasharma",
-  },
-  {
-    username: "SmileyFace21",
-    name: "Ananya Iyer",
-    branch: "AIML",
-    semester: "5",
-    college: "MSRIT",
-    bio: "AI/ML nerd obsessed with NLP models. Currently building a sentiment analysis tool for campus reviews.",
-    skills: ["Python", "TensorFlow", "PyTorch", "HuggingFace", "Scikit-learn"],
-    avatarColor: "#f59e0b",
-    linkedinUrl: null,
-    githubUrl: "https://github.com/ananyaiyer",
-  },
-  {
-    username: "NinjaCoder",
-    name: "Rahul Gupta",
-    branch: "CSE",
-    semester: "7",
-    college: "PES University",
-    bio: "Competitive programmer — 300+ LeetCode problems solved. Loves system design and distributed systems.",
-    skills: ["C++", "Java", "System Design", "Redis", "Kafka"],
-    avatarColor: "#3b82f6",
-    linkedinUrl: "https://linkedin.com/in/rahulgupta",
-    githubUrl: "https://github.com/rahulgupta",
-  },
-  {
-    username: "GhostWriter",
-    name: "Kavya Nair",
-    branch: "ISE",
-    semester: "3",
-    college: "BMS College of Engineering",
-    bio: "Technical writer and blogger. Turns complex engineering topics into readable stories.",
-    skills: ["Technical Writing", "Markdown", "SEO", "WordPress", "Content Strategy"],
-    avatarColor: "#8b5cf6",
-    linkedinUrl: "https://linkedin.com/in/kavyanair",
-    githubUrl: null,
-  },
-  {
-    username: "PixelPilot",
-    name: "Aditya Rao",
-    branch: "CSE",
-    semester: "5",
-    college: "DSCE Bangalore",
-    bio: "UI/UX designer who codes. Figma to React in one motion. Portfolio at adityarao.design.",
-    skills: ["Figma", "React", "CSS", "Tailwind", "Framer Motion"],
-    avatarColor: "#ec4899",
-    linkedinUrl: "https://linkedin.com/in/adityarao",
-    githubUrl: "https://github.com/adityarao",
-  },
-  {
-    username: "QuantumFox",
-    name: "Rohan Singh",
-    branch: "ECE",
-    semester: "6",
-    college: "NIE Mysore",
-    bio: "Embedded systems and IoT developer. Building a low-cost EEG headset for my final year project.",
-    skills: ["C", "Arduino", "Raspberry Pi", "PCB Design", "MATLAB"],
-    avatarColor: "#14b8a6",
-    linkedinUrl: "https://linkedin.com/in/rohansingh",
-    githubUrl: "https://github.com/rohansingh",
-  },
-  {
-    username: "BinarySoul",
-    name: "Sneha Patel",
-    branch: "DS",
-    semester: "4",
-    college: "Jyothy Institute of Technology",
-    bio: "Data science enthusiast. I turn messy datasets into clean insights. Kaggle Silver medalist.",
-    skills: ["Python", "Pandas", "Tableau", "SQL", "Power BI"],
-    avatarColor: "#10b981",
-    linkedinUrl: "https://linkedin.com/in/snehapatel",
-    githubUrl: "https://github.com/snehapatel",
-  },
-  {
-    username: "NeonByte",
-    name: "Vikram Reddy",
-    branch: "MECH",
-    semester: "5",
-    college: "BMSCE Bangalore",
-    bio: "Mechanical engineer who got lost in robotics and never went back. Building an autonomous rover.",
-    skills: ["SolidWorks", "ROS", "C++", "Python", "3D Printing"],
-    avatarColor: "#f97316",
-    linkedinUrl: null,
-    githubUrl: "https://github.com/vikramreddy",
-  },
-  {
-    username: "StarDevGirl",
-    name: "Divya Joshi",
-    branch: "CSE",
-    semester: "8",
-    college: "Bangalore Institute of Technology",
-    bio: "Final year dev. Placed at Flipkart SDE-1. Mentoring juniors on placement prep.",
-    skills: ["Java", "Spring Boot", "Microservices", "AWS", "MySQL"],
-    avatarColor: "#06b6d4",
-    linkedinUrl: "https://linkedin.com/in/divyajoshi",
-    githubUrl: "https://github.com/divyajoshi",
-  },
-  {
-    username: "CircuitBreaker",
-    name: "Kiran Kumar",
-    branch: "ECE",
-    semester: "6",
-    college: "NIE Mysore",
-    bio: "VLSI design student. Interning at Qualcomm this summer. RTL coding is my hobby.",
-    skills: ["Verilog", "VHDL", "FPGA", "Cadence", "SystemVerilog"],
-    avatarColor: "#7c5cff",
-    linkedinUrl: "https://linkedin.com/in/kirankumar",
-    githubUrl: null,
-  },
-  {
-    username: "DataDreamer",
-    name: "Pooja Desai",
-    branch: "AIML",
-    semester: "5",
-    college: "MSRIT",
-    bio: "Computer vision researcher. Working on a real-time pothole detection system for Bengaluru roads.",
-    skills: ["OpenCV", "YOLOv8", "Python", "TensorFlow", "Flask"],
-    avatarColor: "#e85d75",
-    linkedinUrl: "https://linkedin.com/in/poojadesai",
-    githubUrl: "https://github.com/poojadesai",
-  },
-  {
-    username: "TechNomad",
-    name: "Farhan Ahmed",
-    branch: "CSE",
-    semester: "5",
-    college: "PES University",
-    bio: "Cloud-native developer on AWS. Building serverless APIs for startup projects.",
-    skills: ["AWS Lambda", "DynamoDB", "Serverless", "Go", "Terraform"],
-    avatarColor: "#84cc16",
-    linkedinUrl: "https://linkedin.com/in/farhanahmed",
-    githubUrl: "https://github.com/farhanahmed",
-  },
-  {
-    username: "AlphaHacker",
-    name: "Keerthi Reddy",
-    branch: "ISE",
-    semester: "7",
-    college: "RV College of Engineering",
-    bio: "Ethical hacker. Ranked in top 500 on HackTheBox. Bug bounty hunter on HackerOne.",
-    skills: ["Penetration Testing", "Metasploit", "Nmap", "Python", "OSINT"],
-    avatarColor: "#ef4444",
-    linkedinUrl: null,
-    githubUrl: "https://github.com/keerthireddy",
-  },
-  {
-    username: "ByteWitch",
-    name: "Ishika Sharma",
-    branch: "DS",
-    semester: "4",
-    college: "BMS College of Engineering",
-    bio: "Graph databases and network analysis. Research on social network influence propagation.",
-    skills: ["Neo4j", "Python", "NetworkX", "R", "Graph Theory"],
-    avatarColor: "#a78bfa",
-    linkedinUrl: "https://linkedin.com/in/ishikasharma",
-    githubUrl: "https://github.com/ishikasharma",
-  },
-  {
-    username: "RocketCoder",
-    name: "Aakash Verma",
-    branch: "CSE",
-    semester: "6",
-    college: "DSCE Bangalore",
-    bio: "Backend performance wizard. Optimized API from 4s to 120ms response time. Database query junkie.",
-    skills: ["Node.js", "PostgreSQL", "Redis", "Elasticsearch", "Kafka"],
-    avatarColor: "#3b82f6",
-    linkedinUrl: "https://linkedin.com/in/aakashverma",
-    githubUrl: "https://github.com/aakashverma",
-  },
-  {
-    username: "MindMapper",
-    name: "Meera Pillai",
-    branch: "AIML",
-    semester: "3",
-    college: "MSRIT",
-    bio: "First year AI student exploring the intersection of mental health and machine learning.",
-    skills: ["Python", "Scikit-learn", "NumPy", "Matplotlib", "Jupyter"],
-    avatarColor: "#ec4899",
-    linkedinUrl: null,
-    githubUrl: "https://github.com/meerapillai",
-  },
-  {
-    username: "WebNinja",
-    name: "Siddharth Rao",
-    branch: "CSE",
-    semester: "7",
-    college: "PES University",
-    bio: "Frontend architect. Loves web performance, Core Web Vitals, and accessibility.",
-    skills: ["React", "Next.js", "WebGL", "TypeScript", "GraphQL"],
-    avatarColor: "#f59e0b",
-    linkedinUrl: "https://linkedin.com/in/siddharthrao",
-    githubUrl: "https://github.com/siddharthrao",
-  },
-  {
-    username: "CloudSurfer",
-    name: "Ankit Mehta",
-    branch: "ISE",
-    semester: "5",
-    college: "Bangalore Institute of Technology",
-    bio: "DevOps and cloud enthusiast. AWS Certified. Docker + Kubernetes for all my projects.",
-    skills: ["Kubernetes", "Docker", "CI/CD", "Prometheus", "Grafana"],
-    avatarColor: "#06b6d4",
-    linkedinUrl: "https://linkedin.com/in/ankitmehta",
-    githubUrl: "https://github.com/ankitmehta",
-  },
-  {
-    username: "LogicLion",
-    name: "Deepa Singh",
-    branch: "ECE",
-    semester: "6",
-    college: "NIE Mysore",
-    bio: "Signal processing and wireless comms researcher. Working on 5G beamforming algorithms.",
-    skills: ["MATLAB", "Python", "Signal Processing", "GNU Radio", "OFDM"],
-    avatarColor: "#10b981",
-    linkedinUrl: "https://linkedin.com/in/deepasingh",
-    githubUrl: null,
-  },
-  {
-    username: "SynthWave",
-    name: "Aryan Jain",
-    branch: "CSE",
-    semester: "4",
-    college: "RV College of Engineering",
-    bio: "Game developer and creative coder. Built 3 Unity games published on itch.io.",
-    skills: ["Unity", "C#", "Blender", "Unreal Engine", "Shader Programming"],
-    avatarColor: "#8b5cf6",
-    linkedinUrl: "https://linkedin.com/in/aryanjain",
-    githubUrl: "https://github.com/aryanjain",
-  },
-  {
-    username: "VortexDev",
-    name: "Rhea Nair",
-    branch: "DS",
-    semester: "5",
-    college: "Jyothy Institute of Technology",
-    bio: "Blockchain developer exploring Web3. Smart contracts on Ethereum and Solana.",
-    skills: ["Solidity", "Web3.js", "Hardhat", "Rust", "IPFS"],
-    avatarColor: "#f97316",
-    linkedinUrl: "https://linkedin.com/in/rheanair",
-    githubUrl: "https://github.com/rheanair",
-  },
-  {
-    username: "ProtoHero",
-    name: "Sahil Khan",
-    branch: "MECH",
-    semester: "6",
-    college: "BMSCE Bangalore",
-    bio: "Mechanical engineer pivoting to product design. Prototyping drone frames and testing aerodynamics.",
-    skills: ["AutoCAD", "SolidWorks", "FEA", "CFD", "Ansys"],
-    avatarColor: "#14b8a6",
-    linkedinUrl: null,
-    githubUrl: "https://github.com/sahilkhan",
-  },
-  {
-    username: "NeuroPilot",
-    name: "Tanvi Gupta",
-    branch: "AIML",
-    semester: "7",
-    college: "MSRIT",
-    bio: "Deep learning researcher. Published a paper on transformer architectures at ICML workshop.",
-    skills: ["PyTorch", "JAX", "CUDA", "LLMs", "MLOps"],
-    avatarColor: "#e85d75",
-    linkedinUrl: "https://linkedin.com/in/tanvigupta",
-    githubUrl: "https://github.com/tanvigupta",
-  },
-  {
-    username: "XenonCraft",
-    name: "Suresh Bose",
-    branch: "CSE",
-    semester: "8",
-    college: "PES University",
-    bio: "Final year student. Founded a startup that automates college canteen ordering. 400+ daily users.",
-    skills: ["React Native", "Firebase", "Stripe", "Node.js", "MongoDB"],
-    avatarColor: "#7c5cff",
-    linkedinUrl: "https://linkedin.com/in/sureshbose",
-    githubUrl: "https://github.com/sureshbose",
-  },
-];
 
 // ─────────────────────────────────────────────
 // 20 COMMUNITIES (exact titles + descriptions)
@@ -1024,94 +723,96 @@ const MENTORSHIP_QA = [
 // SEED FUNCTION
 // ─────────────────────────────────────────────
 export async function autoSeed(): Promise<void> {
-  // Check if already seeded
-  const [existing] = await db
+  // Check both new marker ("oghemz") AND legacy marker ("CyberKnight").
+  // If either is present the DB was already seeded — skip unconditionally.
+  // This is safe on environments seeded by any previous version of this file.
+  const existingNew = await db
     .select({ id: usersTable.id })
     .from(usersTable)
-    .where(eq(usersTable.username, SEED_MARKER))
+    .where(eq(usersTable.username, SEED_MARKER_USERNAME))
     .limit(1);
 
-  if (existing) return; // already seeded
+  if (existingNew.length > 0) return; // already seeded with EWIT dataset
 
-  console.log("[auto-seed] Seeding production demo data...");
+  const existingLegacy = await db
+    .select({ id: usersTable.id })
+    .from(usersTable)
+    .where(eq(usersTable.username, "CyberKnight"))
+    .limit(1);
 
-  const passwordHash = await bcrypt.hash("Student@123", 10);
+  if (existingLegacy.length > 0) {
+    // Legacy environment — do not overwrite. To upgrade, run the reset script:
+    // pnpm --filter @workspace/scripts run reset-seed
+    console.log("[auto-seed] Legacy seed detected (CyberKnight). Skipping. Run reset-seed to upgrade to the EWIT dataset.");
+    return;
+  }
+
+  console.log("[auto-seed] Seeding EWIT demo data (160 students + system accounts)...");
+
   const client = await pool.connect();
 
   try {
     await client.query("BEGIN");
 
-    // ── 1. Get admin user ID ──
-    const adminRes = await client.query<{ id: number }>(
-      `SELECT id FROM users WHERE username = 'ADMIN' LIMIT 1`
-    );
-    const adminId: number | null = adminRes.rows[0]?.id ?? null;
-
-    // ── 2. Insert named demo users ──
-    const userIds: number[] = [];
-    for (const u of NAMED_USERS) {
+    // ── 2. Insert system accounts (admin + moderator) ──
+    // ON CONFLICT DO NOTHING — safe if run more than once (e.g. mid-seed crash retry)
+    let adminId: number | null = null;
+    for (const sys of SYSTEM_ACCOUNTS) {
+      const hash = await bcrypt.hash(sys.password, 10);
       const r = await client.query<{ id: number }>(
         `INSERT INTO users
-           (username, name, branch, semester, bio, skills, avatar_color,
-            linkedin_url, github_url, password_hash, account_status,
-            onboarding_complete, role, coins, created_at)
-         VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,'approved',true,'user',$11,NOW())
-         ON CONFLICT (username) DO UPDATE SET username = EXCLUDED.username
+           (username, name, email, avatar_color, password_hash,
+            account_status, onboarding_complete, role, coins, is_private, created_at)
+         VALUES ($1,$2,$3,$4,$5,'approved',true,$6,100,false,NOW())
+         ON CONFLICT (username) DO NOTHING
          RETURNING id`,
-        [
-          u.username,
-          u.name,
-          u.branch,
-          u.semester,
-          u.bio,
-          u.skills,
-          u.avatarColor,
-          u.linkedinUrl ?? null,
-          u.githubUrl ?? null,
-          passwordHash,
-          50 + Math.floor(Math.random() * 450),
-        ]
+        [sys.username, sys.name, sys.email, sys.avatarColor, hash, sys.role]
       );
-      userIds.push(r.rows[0].id);
+      if (sys.role === "admin" && r.rows[0]) adminId = r.rows[0].id;
     }
 
-    // ── 3. Insert ghost users in bulk (for realistic member counts) ──
-    const AVATAR_COLORS = [
-      "#7c5cff","#e85d75","#3b82f6","#10b981","#f59e0b",
-      "#8b5cf6","#ec4899","#14b8a6","#f97316","#06b6d4",
-      "#84cc16","#ef4444","#a78bfa","#f43f5e","#22c55e",
-    ];
-    const ghostCount = 220;
-    const ghostIds: number[] = [];
-
-    for (let i = 1; i <= ghostCount; i += 50) {
-      const batch = Math.min(50, ghostCount - i + 1);
-      const values: string[] = [];
-      const params: unknown[] = [];
-      let p = 1;
-      for (let j = 0; j < batch; j++) {
-        const idx = i + j;
-        const color = AVATAR_COLORS[idx % AVATAR_COLORS.length];
-        values.push(`($${p},$${p+1},$${p+2},$${p+3},$${p+4},$${p+5})`);
-        params.push(
-          `ghost_${String(idx).padStart(3, "0")}`,
-          `Student ${idx}`,
-          color,
-          passwordHash,
-          Math.floor(Math.random() * 200) + 50,
-          Math.random() > 0.15 ? "approved" : "pending"
-        );
-        p += 6;
-      }
+    // If admin was already present (DO NOTHING path), fetch their id
+    if (!adminId) {
       const res = await client.query<{ id: number }>(
-        `INSERT INTO users (username, name, avatar_color, password_hash, coins, account_status, onboarding_complete, role, created_at)
-         SELECT u.username, u.name, u.avatar_color, u.password_hash, u.coins::integer, u.account_status, true, 'user', NOW()
-         FROM (VALUES ${values.join(",")}) AS u(username, name, avatar_color, password_hash, coins, account_status)
-         ON CONFLICT (username) DO UPDATE SET username = EXCLUDED.username
-         RETURNING id`,
-        params
+        `SELECT id FROM users WHERE username = 'ADMIN' LIMIT 1`
       );
-      ghostIds.push(...res.rows.map(r => r.id));
+      adminId = res.rows[0]?.id ?? null;
+    }
+
+    // ── 3. Insert all 160 hardcoded students ──
+    const studentHash = await bcrypt.hash("Student123", 10);
+    const userIds: number[] = [];
+    for (const s of ALL_STUDENTS) {
+      const r = await client.query<{ id: number }>(
+        `INSERT INTO users
+           (username, name, usn, email, branch, semester, avatar_color,
+            password_hash, account_status, onboarding_complete, role,
+            coins, is_private, created_at)
+         VALUES ($1,$2,$3,$4,$5,$6,$7,$8,'approved',true,'user',$9,false,NOW())
+         ON CONFLICT (username) DO NOTHING
+         RETURNING id`,
+        [
+          s.username,
+          s.name,
+          s.usn,
+          s.email,
+          s.department,
+          s.semester,
+          s.avatarColor,
+          studentHash,
+          50 + Math.floor(Math.random() * 200),
+        ]
+      );
+      // If conflict (already exists), fetch the existing id
+      if (r.rows[0]) {
+        userIds.push(r.rows[0].id);
+      } else {
+        const existing = await client.query<{ id: number }>(
+          `SELECT id FROM users WHERE username = $1 LIMIT 1`,
+          [s.username]
+        );
+        if (existing.rows[0]) userIds.push(existing.rows[0].id);
+      }
     }
 
     // ── 4. Insert communities ──
@@ -1142,21 +843,6 @@ export async function autoSeed(): Promise<void> {
            VALUES ($1,$2,NOW() - ($3 || ' days')::interval)
            ON CONFLICT DO NOTHING`,
           [uid, cid, daysAgo]
-        );
-      }
-    }
-
-    // Each ghost user joins 10-14 random communities
-    for (const gid of ghostIds) {
-      const joinCount = 10 + Math.floor(Math.random() * 5);
-      const shuffled = [...communityIds].sort(() => Math.random() - 0.5).slice(0, joinCount);
-      for (const cid of shuffled) {
-        const daysAgo = Math.floor(Math.random() * 90);
-        await client.query(
-          `INSERT INTO community_members (user_id, community_id, joined_at)
-           VALUES ($1,$2,NOW() - ($3 || ' days')::interval)
-           ON CONFLICT DO NOTHING`,
-          [gid, cid, daysAgo]
         );
       }
     }
@@ -1226,7 +912,7 @@ export async function autoSeed(): Promise<void> {
     }
 
     await client.query("COMMIT");
-    console.log(`[auto-seed] ✅ Done — ${NAMED_USERS.length} named users, ${ghostIds.length} ghost users, ${COMMUNITIES.length} communities, ${MENTORSHIP_QA.length} mentorship threads`);
+    console.log(`[auto-seed] ✅ Done — ${ALL_STUDENTS.length} students, ${SYSTEM_ACCOUNTS.length} system accounts, ${COMMUNITIES.length} communities, ${MENTORSHIP_QA.length} mentorship threads`);
   } catch (err) {
     await client.query("ROLLBACK");
     console.error("[auto-seed] ❌ Failed:", err);
