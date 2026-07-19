@@ -1,0 +1,251 @@
+Populate the application with realistic, production-quality demo data. Do not generate placeholder text like "Sample Community" or "User 1". Everything must be hardcoded into the project so it continues to work after downloading the source code and opening it in another IDE. Create a dedicated seed file (such as src/data/seed.ts, src/data/demoData.ts, or JSON files) and make the application load this data by default.
+
+========================
+COMMUNITIES
+========================
+
+Create exactly 20 communities.
+
+Use these titles and descriptions EXACTLY as written below. Do not modify, shorten, rewrite, or paraphrase them.
+
+1.
+Title: BioHackers
+Description:
+Exploring the intersection of biology, engineering, and DIY synthetic biology.
+
+2.
+Title: Eco-Engineers
+Description:
+A sustainability-focused group working on campus waste management and renewable solutions.
+
+3.
+Title: Finance Forge
+Description:
+Bridging the gap between engineering and the stock market, crypto, and personal finance.
+
+4.
+Title: Gaming Ground
+Description:
+A hub for E-sports, game design, and competitive gaming analysis.
+
+5.
+Title: Mental Wellness Collective
+Description:
+A peer-led group dedicated to stress management and campus mental health awareness.
+
+6.
+Title: Culinary Code
+Description:
+Mastering the science of cooking and molecular gastronomy.
+
+7.
+Title: Ethical Hacker Syndicate
+Description:
+Focused on penetration testing, cybersecurity defense, and data privacy.
+
+8.
+Title: Venture Vanguard
+Description:
+Helping students scale their side projects into actual startups.
+
+9.
+Title: Podcast Pioneers
+Description:
+A media production group dedicated to campus stories and technical education series.
+
+10.
+Title: Aero-Drone League
+Description:
+Focused specifically on the flight mechanics and aerial photography of high-speed drones.
+
+11.
+Title: Language Lab
+Description:
+A platform to learn foreign languages like German, Japanese, or French for global careers.
+
+12.
+Title: Philosophy & Tech
+Description:
+Discussing the ethics of AI, robotics, and the future of human existence.
+
+13.
+Title: Retro-Tech Society
+Description:
+Restoring vintage hardware and understanding the history of computing.
+
+14.
+Title: Design Thinking Den
+Description:
+A community focused on UX/UI design and product prototyping.
+
+15.
+Title: Space Law & Policy
+Description:
+Discussing the regulations surrounding satellite launches and space exploration.
+
+16.
+Title: Fashion Engineering
+Description:
+Experimenting with wearable technology and smart fabrics.
+
+17.
+Title: Adventure Alliance
+Description:
+Organizing trekking, camping, and outdoor survival skills for students.
+
+18.
+Title: Writer’s Block Breakers
+Description:
+A collaborative space for technical writing, storytelling, and blogging.
+
+19.
+Title: Automotive Restoration
+Description:
+Hands-on work on vintage car mechanics and modified engine performance.
+
+20.
+Title: Civic Tech Action
+Description:
+Applying engineering skills to solve local Bengaluru-specific urban infrastructure problems.
+
+For every community additionally generate:
+
+• AI-generated banner prompt
+• AI-generated logo prompt
+• Category
+• Tags
+• 250–500 members
+• 10–50 online members
+• Founder
+• 2 moderators
+• Join status
+• Visibility
+• 6–12 discussion posts
+• 3 announcements
+• Recent activity
+• Member avatars
+• Creation date
+
+========================
+USERS
+========================
+
+Create exactly 25 student users.
+
+Do NOT use real names as usernames.
+
+Examples of the style:
+
+CyberKnight
+CodingHero
+SmileyFace21
+NinjaCoder
+GhostWriter
+PixelPilot
+QuantumFox
+BinarySoul
+
+Each user should contain:
+
+• Full fictional name
+• Username
+• Profile picture prompt
+• College
+• Branch
+• Semester
+• Bio
+• Skills
+• Interests
+• Communities joined
+• Badges
+• Reputation
+• Social links (optional)
+• Join date
+
+Generate diverse engineering branches and colleges.
+
+========================
+ANNOUNCEMENTS
+========================
+
+Create 4 announcements.
+
+2 should be from Admin.
+
+2 should be from Moderators.
+
+Announcements should feel realistic, including:
+
+• Semester reminders
+• Platform updates
+• Community events
+• Marketplace safety reminders
+• Hackathon reminders
+
+Each announcement should include:
+
+• Title
+• Description
+• Posted by
+• Date
+• Priority
+• Read count
+
+========================
+MENTORSHIP
+========================
+
+Create 10 mentorship questions.
+
+Each question must have between 3 and 5 detailed replies.
+
+Replies should come from different mentors and senior students.
+
+Topics should include:
+
+• Resume review
+• DSA
+• Full Stack
+• MERN
+• AI
+• Cybersecurity
+• Placements
+• Internships
+• Communication
+• Career confusion
+
+Every mentorship post should include:
+
+• Question
+• Student username
+• Category
+• Posted date
+• Upvotes
+• Views
+• 3–5 replies
+• Reply author
+• Reply date
+
+========================
+GENERAL REQUIREMENTS
+========================
+
+Everything must be hardcoded.
+
+Do not fetch from APIs.
+
+Do not leave placeholders.
+
+Do not generate Lorem Ipsum.
+
+Generate realistic data.
+
+Randomize dates naturally.
+
+Use consistent IDs.
+
+Create reusable seed objects.
+
+Ensure the application automatically loads all demo data on first launch.
+
+The project should continue to function identically after downloading the code and opening it in any IDE without requiring any backend changes.

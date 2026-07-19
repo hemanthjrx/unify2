@@ -1,0 +1,73 @@
+Populate the Mentorship and Announcements sections with realistic, hardcoded demo data. Do not use placeholder text, Lorem Ipsum, or dummy values. Store everything in a dedicated seed/data file (such as `src/data/mentorship.ts`, `src/data/announcements.ts`, or `src/data/demoData.ts`) so the same data is available after downloading the project or opening it in another IDE.
+
+Use only the fields already supported by the existing UI. Do not redesign or add new fields.
+
+========================
+MENTORSHIP
+========================
+
+Create exactly 10 mentorship questions.
+
+The questions should cover topics such as:
+
+- Resume Review
+- DSA Preparation
+- MERN Stack
+- Full Stack Development
+- Artificial Intelligence
+- Cybersecurity
+- Internship Guidance
+- Placement Preparation
+- Communication Skills
+- Career Guidance
+
+For every mentorship question:
+
+- Use one of the existing demo users as the author.
+- Generate a realistic title.
+- Generate a detailed question.
+- Use realistic posting dates.
+- Generate engagement values naturally.
+
+Each mentorship question must contain **3–5 meaningful replies** from different demo users acting as mentors or senior students.
+
+Replies should provide practical advice instead of one-line answers.
+
+Keep the conversations realistic and helpful.
+
+========================
+ANNOUNCEMENTS
+========================
+
+Create exactly 4 announcements.
+
+- 2 announcements posted by Admin.
+- 2 announcements posted by Community Moderators.
+
+Announcements should include topics such as:
+
+- Platform Updates
+- Semester Reminders
+- Community Events
+- Marketplace Safety Tips
+- Hackathon Registration Reminders
+
+Generate realistic:
+
+- Title
+- Description
+- Posted By
+- Posted Date
+
+========================
+GENERAL REQUIREMENTS
+========================
+
+- Use existing demo users wherever applicable.
+- Do not create placeholder usernames.
+- Do not generate images.
+- Do not modify the UI.
+- Do not add unsupported fields.
+- Hardcode everything into the project's seed/data files.
+- Do not fetch data from any API or backend.
+- The application should always display the same demo data after downloading or moving the project to another IDE.

@@ -1,0 +1,81 @@
+Populate the Freelancing and Marketplace sections with realistic, hardcoded demo data. Do not use placeholder text, Lorem Ipsum, or dummy values. Store everything in a dedicated seed/data file (such as `src/data/freelancing.ts`, `src/data/marketplace.ts`, or `src/data/demoData.ts`) so the same data is available after downloading the project or opening it in another IDE.
+
+Do NOT generate, download, or create images. I will manually add all images later. Simply leave the existing image field/path empty or use the image filenames/placeholders already supported by the project without modifying the UI.
+
+========================
+FREELANCING
+========================
+
+Create exactly 10 freelancing services using the titles and descriptions below. Do not modify, rewrite, shorten, or paraphrase them.
+
+1. Video Editing
+I transform raw footage into high-retention, engaging content tailored for YouTube, Instagram Reels, and TikTok, focusing on seamless cuts, pacing, and visual storytelling.
+
+2. Photography
+I capture high-quality, professional images with a keen eye for lighting, composition, and framing, perfect for portfolios, events, or brand imagery.
+
+3. Videography
+I provide end-to-end video production services, capturing cinematic footage for projects that require a polished, professional, and visually striking look.
+
+4. Web Development
+I build responsive, modern, and user-friendly websites tailored to your business needs, ensuring clean code, fast load times, and a seamless functional experience.
+
+5. Sketching Portraits
+I create detailed, hand-drawn, or digital portraits that capture personality and likeness, ideal for personalized gifts, avatars, or artistic projects.
+
+6. Content Writing
+I craft clear, engaging, and SEO-optimized written content, including blog posts, website copy, and articles designed to capture attention and deliver value.
+
+7. Graphic Design
+I design high-impact visual assets, including logos, branding materials, and digital graphics that help your brand stand out and communicate effectively.
+
+8. Poster Making
+I create eye-catching, professionally formatted posters for events, marketing campaigns, or personal use, balancing typography and imagery for maximum visibility.
+
+9. Social Media Management
+I handle your social media presence by strategizing content calendars, managing posts, and driving engagement to help build your brand’s community and reach.
+
+10. UI/UX Design
+I design intuitive interfaces and user experiences, focusing on user-centered layouts, wireframing, and prototypes that make your app or website easy and satisfying to use.
+
+For every service generate:
+
+- Provider (choose from the demo users)
+- Category
+- Starting price
+- Availability
+- Experience level
+- 20–25 ratings ranging from 2.5★ to 5★
+- 6–9 realistic customer reviews
+
+========================
+MARKETPLACE
+========================
+
+Create exactly 20 marketplace products using the exact titles and descriptions previously provided. Do not modify the titles or descriptions.
+
+For every product generate:
+
+- Seller (choose from the demo users)
+- Category
+- Price
+- Stock quantity
+- Condition (if applicable)
+- Tags
+- 20–25 ratings ranging from 2.5★ to 5★
+- 6–9 realistic customer reviews
+
+========================
+GENERAL REQUIREMENTS
+========================
+
+- Use only the existing Marketplace and Freelancing UI.
+- Do not add, remove, or modify any existing fields.
+- Do not generate or download any images.
+- Reviews should sound natural and be written by different users.
+- Ratings should have realistic distributions instead of every item being 5 stars.
+- Randomize prices appropriately.
+- Assign different demo users as sellers and freelancers.
+- Hardcode everything into the project's seed/data files.
+- Do not fetch data from APIs or databases.
+- The application should display the same demo data every time it is opened.

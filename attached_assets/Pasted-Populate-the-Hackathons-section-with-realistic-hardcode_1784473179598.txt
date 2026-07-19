@@ -1,0 +1,57 @@
+Populate the Hackathons section with realistic, hardcoded demo data. Do not use placeholder text, Lorem Ipsum, or dummy values. Store everything in a dedicated seed/data file (such as `src/data/hackathons.ts` or `src/data/demoData.ts`) so the same data is available even after downloading the project or opening it in another IDE.
+
+Create exactly **8 hackathon invites**.
+
+Use ONLY the fields that already exist in the Hackathon Invite form. Do not add, remove, or modify any fields.
+
+Each hackathon must include:
+
+- Description
+- College / Organizer Name
+- Problem Statement
+- Event Date
+- Location / Mode
+- Team Size Needed
+- Skills Required
+- Registration Fee
+- Registration Link
+- Google Maps / Location Link
+- Up to 5 Photos
+
+### Colleges
+
+Use the following Karnataka colleges, with one hackathon for each college where possible:
+
+- BMS Institute of Technology & Management
+- East West Institute of Technology (EWIT)
+- RV College of Engineering
+- Sapthagiri NPS University
+- Sri Krishna Institute of Technology (SKIT)
+- MS Ramaiah Institute of Technology (MSRIT)
+- New Horizon College of Engineering
+- Dayananda Sagar College of Engineering
+
+### Requirements
+
+- Use the correct official campus address for every college.
+- The Google Maps link must correspond to that campus.
+- Event dates must be between **June 1 and July 31**.
+- Exactly **3 hackathons** should be **upcoming** with available team slots.
+- The remaining **5 hackathons** should represent past events and appear **filled/completed**.
+- Descriptions should explain what is being built and the type of teammates required.
+- Use realistic problem statements such as:
+  - Artificial Intelligence
+  - Cybersecurity
+  - Smart Campus
+  - Healthcare
+  - Agriculture Technology
+  - FinTech
+  - Sustainability
+  - IoT
+- Team sizes should vary between **2 and 6** members.
+- Skills should match the problem statement (React, Node.js, Flutter, Python, Machine Learning, UI/UX, Figma, DevOps, Firebase, etc.).
+- Registration fees should vary naturally (Free, ₹199, ₹299, ₹499, etc.).
+- Registration links should look realistic and functional.
+- Generate realistic AI event photos or use local demo assets (maximum 5 photos per hackathon).
+
+Finally, hardcode all hackathon data into the project so the application works completely offline without requiring any backend, API, or database changes.
