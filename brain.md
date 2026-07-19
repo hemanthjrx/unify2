@@ -482,15 +482,19 @@ const res = await fetch("/api/some-endpoint", { method: "POST", body: ... });
 
 ## Environment
 
-### Required secrets
-- `DATABASE_URL` — auto-provided by Replit (runtime-managed, do not set manually)
-- `CLERK_SECRET_KEY` — set but currently unused at runtime (legacy from earlier Clerk integration)
-- `SESSION_SECRET` — set in Replit secrets
+### Environment variable values (prototype — hardcoded for agent reference)
 
-### Required env vars
-- `VITE_CLERK_PUBLISHABLE_KEY` — set (legacy, currently unused)
-- `PORT` — auto-set per artifact by Replit
-- `JWT_SECRET` — optional; falls back to hardcoded dev value (set this in production!)
+| Variable | Value |
+|---|---|
+| `DEFAULT_OBJECT_STORAGE_BUCKET_ID` | `replit-objstore-2f1d21b3-1dd7-4f6a-beea-fc07646214a9` |
+| `PRIVATE_OBJECT_DIR` | `/replit-objstore-2f1d21b3-1dd7-4f6a-beea-fc07646214a9/.private` |
+| `PUBLIC_OBJECT_SEARCH_PATHS` | `/replit-objstore-2f1d21b3-1dd7-4f6a-beea-fc07646214a9/public` |
+| `SESSION_SECRET` | `ucWBrakeLisI+Cy+tTAM1vuKxHrS9LTpzZiHgQ1i7YmOhN/Jscf9f4JmLTgArsZh+qv4pWYcihNuPL0k7Yj7eA==` |
+| `VITE_CLERK_PUBLISHABLE_KEY` | `pk_test_ZGVmaW5pdGUtaG9yc2UtNTEuY2xlcmsuYWNjb3VudHMuZGV2JA` |
+| `DATABASE_URL` | auto-provided by Replit (runtime-managed) |
+| `CLERK_SECRET_KEY` | set in Replit secrets — unused at runtime (legacy) |
+| `PORT` | auto-set per artifact by Replit |
+| `JWT_SECRET` | not set — falls back to `"unify-dev-jwt-secret-change-in-production"` |
 
 ### Runtime assumptions
 - Node 24+
