@@ -18,6 +18,7 @@ import {
 } from "@workspace/db";
 import { eq, inArray } from "drizzle-orm";
 import { ALL_STUDENTS, SYSTEM_ACCOUNTS, SEED_MARKER_USERNAME } from "./data/students.js";
+import { MARKETPLACE_LISTINGS, FREELANCE_LISTINGS } from "./data/marketplace-freelance.js";
 
 // ─────────────────────────────────────────────
 // (NAMED_USERS replaced by hardcoded dataset)
@@ -911,8 +912,86 @@ export async function autoSeed(): Promise<void> {
       }
     }
 
+    // ── 9. Marketplace listings + reviews ──
+    for (const listing of MARKETPLACE_LISTINGS) {
+      const sellerId = userIds[listing.sellerIdx];
+      const prodRes = await client.query<{ id: number }>(
+        `INSERT INTO marketplace_products (seller_id, title, description, price, category, images, created_at)
+         VALUES ($1,$2,$3,$4,$5,'{}',NOW() - (${Math.floor(Math.random() * 60) + 5} || ' days')::interval)
+         ON CONFLICT DO NOTHING
+         RETURNING id`,
+        [sellerId, listing.title, listing.description, listing.price, listing.category]
+      );
+      if (!prodRes.rows[0]) continue; // skip if already seeded
+      const productId = prodRes.rows[0].id;
+
+      // Full reviews (with comment)
+      for (const rev of listing.reviews) {
+        const reviewerId = userIds[rev.reviewerIdx];
+        const daysAgo = Math.floor(Math.random() * 30) + 1;
+        await client.query(
+          `INSERT INTO product_reviews (product_id, reviewer_id, rating, comment, created_at)
+           VALUES ($1,$2,$3,$4,NOW() - ($5 || ' days')::interval)
+           ON CONFLICT DO NOTHING`,
+          [productId, reviewerId, rev.rating, rev.comment, daysAgo]
+        );
+      }
+
+      // Extra rating-only entries (no comment) to reach 20-25 total
+      for (const rIdx of listing.extraRaterIdxs) {
+        const reviewerId = userIds[rIdx];
+        const rating = 3 + Math.floor(Math.random() * 3); // 3-5
+        const daysAgo = Math.floor(Math.random() * 45) + 1;
+        await client.query(
+          `INSERT INTO product_reviews (product_id, reviewer_id, rating, comment, created_at)
+           VALUES ($1,$2,$3,NULL,NOW() - ($4 || ' days')::interval)
+           ON CONFLICT DO NOTHING`,
+          [productId, reviewerId, rating, daysAgo]
+        );
+      }
+    }
+
+    // ── 10. Freelance services + reviews ──
+    for (const service of FREELANCE_LISTINGS) {
+      const providerId = userIds[service.providerIdx];
+      const svcRes = await client.query<{ id: number }>(
+        `INSERT INTO freelance_services (provider_id, title, description, price, category, images, delivery_days, created_at)
+         VALUES ($1,$2,$3,$4,$5,'{}', $6, NOW() - (${Math.floor(Math.random() * 60) + 5} || ' days')::interval)
+         ON CONFLICT DO NOTHING
+         RETURNING id`,
+        [providerId, service.title, service.description, service.price, service.category, service.deliveryDays]
+      );
+      if (!svcRes.rows[0]) continue;
+      const serviceId = svcRes.rows[0].id;
+
+      // Full reviews (with comment)
+      for (const rev of service.reviews) {
+        const reviewerId = userIds[rev.reviewerIdx];
+        const daysAgo = Math.floor(Math.random() * 30) + 1;
+        await client.query(
+          `INSERT INTO service_reviews (service_id, reviewer_id, rating, comment, created_at)
+           VALUES ($1,$2,$3,$4,NOW() - ($5 || ' days')::interval)
+           ON CONFLICT DO NOTHING`,
+          [serviceId, reviewerId, rev.rating, rev.comment, daysAgo]
+        );
+      }
+
+      // Extra rating-only entries
+      for (const rIdx of service.extraRaterIdxs) {
+        const reviewerId = userIds[rIdx];
+        const rating = 3 + Math.floor(Math.random() * 3); // 3-5
+        const daysAgo = Math.floor(Math.random() * 45) + 1;
+        await client.query(
+          `INSERT INTO service_reviews (service_id, reviewer_id, rating, comment, created_at)
+           VALUES ($1,$2,$3,NULL,NOW() - ($4 || ' days')::interval)
+           ON CONFLICT DO NOTHING`,
+          [serviceId, reviewerId, rating, daysAgo]
+        );
+      }
+    }
+
     await client.query("COMMIT");
-    console.log(`[auto-seed] ✅ Done — ${ALL_STUDENTS.length} students, ${SYSTEM_ACCOUNTS.length} system accounts, ${COMMUNITIES.length} communities, ${MENTORSHIP_QA.length} mentorship threads`);
+    console.log(`[auto-seed] ✅ Done — ${ALL_STUDENTS.length} students, ${SYSTEM_ACCOUNTS.length} system accounts, ${COMMUNITIES.length} communities, ${MENTORSHIP_QA.length} mentorship threads, ${MARKETPLACE_LISTINGS.length} marketplace listings, ${FREELANCE_LISTINGS.length} freelance services`);
   } catch (err) {
     await client.query("ROLLBACK");
     console.error("[auto-seed] ❌ Failed:", err);

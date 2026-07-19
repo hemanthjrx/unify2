@@ -13,8 +13,11 @@
  */
 
 import bcrypt from "bcrypt";
-import { pool } from "@workspace/db";
-import { ALL_STUDENTS, SYSTEM_ACCOUNTS } from "../../../artifacts/api-server/src/data/students.js";
+import pg from "pg";
+import { ALL_STUDENTS, SYSTEM_ACCOUNTS } from "../../artifacts/api-server/src/data/students.js";
+
+const { Pool } = pg;
+const pool = new Pool({ connectionString: process.env.DATABASE_URL });
 
 async function resetAndSeed() {
   console.log("⚠️  DESTRUCTIVE RESET — wiping users and all related data...");

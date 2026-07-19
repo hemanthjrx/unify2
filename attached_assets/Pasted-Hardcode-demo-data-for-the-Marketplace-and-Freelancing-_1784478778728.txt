@@ -1,0 +1,105 @@
+Hardcode demo data for the Marketplace and Freelancing modules using the existing hardcoded student dataset. Do not modify the UI, database schema, or existing functionality. Simply populate the application with realistic demo data that is permanently available.
+
+# Marketplace
+
+Create exactly **20 marketplace listings** using the following product titles and descriptions exactly as provided.
+
+1. **Scented Soy Candles** – Hand-poured in small batches, these eco-friendly soy candles come in unique scent blends to help you relax after a long day of lectures.
+
+2. **Resin Trinket Trays** – Stylish, one-of-a-kind resin trays perfect for keeping your keys, coins, or jewelry organized on your desk.
+
+3. **Macramé Wall Hangings** – Add a touch of boho aesthetic to your dorm or room with these intricate, handcrafted fiber art wall hangings.
+
+4. **Hand-Painted Terracotta Planters** – Brighten up your study space with these vibrant, hand-painted pots—the perfect home for your new succulent.
+
+5. **Beaded Crystal Bracelets** – Minimalist, handcrafted beaded bracelets designed to bring a little extra positive energy to your daily outfit.
+
+6. **Customized Planner Stickers** – Get organized with my pack of hand-designed, aesthetic stickers tailored for bullet journaling and daily task tracking.
+
+7. **Handmade Bookmarks** – Beautifully crafted bookmarks using high-quality cardstock and pressed flowers—a must-have for every late-night study session.
+
+8. **Personalized Notebook Covers** – I create durable, custom-designed fabric covers for your standard notebooks to keep your notes protected and stylish.
+
+9. **Academic Success Templates (Digital)** – Streamlined, ready-to-use Notion templates designed specifically to help students track assignments and exam schedules.
+
+10. **Custom Vinyl Laptop Decals** – Express your personality with durable, custom-cut vinyl stickers designed specifically for your laptop or water bottle.
+
+11. **Crochet Plushies (Amigurumi)** – Cute, soft, and handmade crochet companions that make the perfect desk buddy or small gift for a friend.
+
+12. **Hand-Sewn Canvas Tote Bags** – Durable, eco-friendly tote bags perfect for carrying your heavy textbooks and laptop across campus in style.
+
+13. **Silk Scrunchies & Headbands** – Soft, hair-friendly accessories handmade in various colors and patterns to match any of your daily looks.
+
+14. **Custom Embroidered Caps** – I offer custom embroidery services for plain caps, adding your initials or a small, unique design to make it your own.
+
+15. **Artisan Lip Balms** – Keep your lips hydrated with these all-natural, handmade balms crafted from organic beeswax and essential oils.
+
+16. **Gourmet Cookie Boxes** – Freshly baked, artisan cookie assortments that are perfect for late-night cravings or sharing with your roommates.
+
+17. **Customized Gift Hampers** – I curate themed gift boxes filled with handmade items like candles, snacks, and stationery—the ultimate "care package" for finals week.
+
+18. **Hand-Blended Tea Sachets** – Relax with my signature blends of herbal tea, hand-packed in eco-friendly sachets for a quick, calming break.
+
+19. **Decorative Keychains** – Unique, handmade resin or bead keychains that add a pop of color and personality to your backpack or keys.
+
+20. **Miniature Canvas Art** – Small, original statement art pieces that are perfect for decorating cramped dorm walls or gifting to friends on a budget.
+
+Every marketplace listing should have:
+
+- A seller selected from the existing hardcoded student dataset.
+- A realistic selling price.
+- Appropriate condition.
+- Appropriate tags.
+- 20–25 ratings.
+- 6–9 realistic reviews.
+- Reviews written by different students.
+- Images left empty or using the existing placeholder system.
+
+---
+
+# Freelancing
+
+Create exactly **10 freelancing services** using the following titles and descriptions exactly as provided.
+
+1. **AI Prompt Engineering & Automation** – Beyond simple usage, businesses now pay for professionals who can build custom AI workflows, chatbots, and optimized prompts to improve operational efficiency.
+
+2. **Web Development** – Core development (React, Next.js, WordPress) remains essential, with added demand for integrating AI APIs and no-code/low-code solutions (e.g., Webflow, Framer).
+
+3. **UI/UX Design** – Creating intuitive digital interfaces using tools like Figma continues to be a high-value skill as companies prioritize user retention and engagement.
+
+4. **Digital Marketing & SEO** – Modern marketing requires a data-driven approach, focusing on SEO strategy, performance marketing (paid ads), and marketing automation.
+
+5. **Content Writing & Copywriting** – Moving beyond generic articles, there is a premium on technical writing, SEO-driven content, and persuasive copywriting that drives conversions.
+
+6. **Video Editing & Short-Form Production** – With the rise of short-form social media content, editors who understand platform-specific retention, hooks, and pacing are in high demand.
+
+7. **Data Analytics** – Businesses rely heavily on freelancers who can collect, visualize, and extract actionable insights from data using tools like SQL, Python, or Tableau.
+
+8. **Cybersecurity Consulting** – As digital threats evolve, freelancers skilled in ethical hacking, security audits, and data protection are increasingly sought after by businesses of all sizes.
+
+9. **Social Media Strategy** – Companies are looking for strategists who can own the full loop of content planning, engagement, and reporting, rather than just basic posting.
+
+10. **Virtual Assistance & Operations** – Modern VAs act more like operations partners, managing complex tasks like inbox management, meeting rhythms, and project coordination for founders.
+
+Each freelancer should have:
+
+- A provider selected from the existing hardcoded student dataset.
+- Realistic pricing.
+- Relevant skills.
+- Experience level.
+- Availability status.
+- 20–25 ratings.
+- 6–9 realistic reviews.
+- Reviews written by different students.
+- Portfolio images left empty or using the existing placeholder system.
+
+---
+
+# Rules
+
+- Use only the existing hardcoded student dataset.
+- Do not create additional users.
+- Sellers, freelancers, buyers, and reviewers must all come from the existing student dataset.
+- No student should review their own product or service.
+- Hardcode everything so the data is permanently available every time the application starts.
+- Keep the product titles, service titles, and descriptions exactly as provided above.
