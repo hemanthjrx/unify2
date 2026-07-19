@@ -96,7 +96,13 @@ export default function CommunitiesPage() {
             className="bg-card border-card-border overflow-hidden flex flex-col"
             data-testid={`card-community-list-${c.slug}`}
           >
-            <div className="h-2" style={{ backgroundColor: c.accentColor }} />
+            {c.bannerImageUrl ? (
+              <div className="h-24 w-full overflow-hidden">
+                <img src={c.bannerImageUrl} alt="" className="w-full h-full object-cover" />
+              </div>
+            ) : (
+              <div className="h-2" style={{ backgroundColor: c.accentColor }} />
+            )}
             <CardHeader className="pb-3">
               <div className="flex items-start justify-between gap-3">
                 <div>
@@ -105,9 +111,9 @@ export default function CommunitiesPage() {
                     {c.memberCount} {c.memberCount === 1 ? "member" : "members"}
                   </div>
                 </div>
-                {c.imageUrl ? (
+                {(c.profileImageUrl || c.imageUrl) ? (
                   <img
-                    src={c.imageUrl}
+                    src={(c.profileImageUrl || c.imageUrl)!}
                     alt={c.name}
                     className="w-11 h-11 rounded-lg object-cover flex-shrink-0"
                   />

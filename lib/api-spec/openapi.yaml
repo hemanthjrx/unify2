@@ -1012,6 +1012,14 @@ components:
           type: integer
         accentColor:
           type: string
+        icon:
+          type: ["string", "null"]
+        imageUrl:
+          type: ["string", "null"]
+        bannerImageUrl:
+          type: ["string", "null"]
+        profileImageUrl:
+          type: ["string", "null"]
         tags:
           type: array
           items:

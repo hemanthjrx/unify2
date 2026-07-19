@@ -13,6 +13,14 @@ export interface Community {
   description: string;
   memberCount: number;
   accentColor: string;
+  /** @nullable */
+  icon?: string | null;
+  /** @nullable */
+  imageUrl?: string | null;
+  /** @nullable */
+  bannerImageUrl?: string | null;
+  /** @nullable */
+  profileImageUrl?: string | null;
   tags: string[];
   isMember: boolean;
 }

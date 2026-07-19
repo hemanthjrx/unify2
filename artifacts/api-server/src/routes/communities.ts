@@ -31,6 +31,8 @@ async function listForViewer(viewerId: number, communityIds?: number[]) {
       accentColor: communitiesTable.accentColor,
       icon: communitiesTable.icon,
       imageUrl: communitiesTable.imageUrl,
+      bannerImageUrl: communitiesTable.bannerImageUrl,
+      profileImageUrl: communitiesTable.profileImageUrl,
       tags: communitiesTable.tags,
       memberCount: sql<number>`(
         select count(*)::int from ${communityMembersTable}

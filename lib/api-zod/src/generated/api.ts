@@ -47,7 +47,6 @@ export const GetMyProfileResponse = zod.object({
   communityCount: zod.number(),
   followerCount: zod.number(),
   followingCount: zod.number(),
-  usernameChangedAt: zod.string().nullish(),
 });
 
 /**
@@ -100,7 +99,6 @@ export const UpdateMyProfileResponse = zod.object({
   communityCount: zod.number(),
   followerCount: zod.number(),
   followingCount: zod.number(),
-  usernameChangedAt: zod.string().nullish(),
 });
 
 /**
@@ -211,6 +209,10 @@ export const DiscoverCommunitiesResponseItem = zod.object({
   description: zod.string(),
   memberCount: zod.number(),
   accentColor: zod.string(),
+  icon: zod.string().nullish(),
+  imageUrl: zod.string().nullish(),
+  bannerImageUrl: zod.string().nullish(),
+  profileImageUrl: zod.string().nullish(),
   tags: zod.array(zod.string()),
   isMember: zod.boolean(),
 });
@@ -228,6 +230,10 @@ export const ListCommunitiesResponseItem = zod.object({
   description: zod.string(),
   memberCount: zod.number(),
   accentColor: zod.string(),
+  icon: zod.string().nullish(),
+  imageUrl: zod.string().nullish(),
+  bannerImageUrl: zod.string().nullish(),
+  profileImageUrl: zod.string().nullish(),
   tags: zod.array(zod.string()),
   isMember: zod.boolean(),
 });
@@ -248,6 +254,10 @@ export const GetCommunityDetailResponse = zod
     description: zod.string(),
     memberCount: zod.number(),
     accentColor: zod.string(),
+    icon: zod.string().nullish(),
+    imageUrl: zod.string().nullish(),
+    bannerImageUrl: zod.string().nullish(),
+    profileImageUrl: zod.string().nullish(),
     tags: zod.array(zod.string()),
     isMember: zod.boolean(),
   })
@@ -279,6 +289,10 @@ export const JoinCommunityResponse = zod.object({
   description: zod.string(),
   memberCount: zod.number(),
   accentColor: zod.string(),
+  icon: zod.string().nullish(),
+  imageUrl: zod.string().nullish(),
+  bannerImageUrl: zod.string().nullish(),
+  profileImageUrl: zod.string().nullish(),
   tags: zod.array(zod.string()),
   isMember: zod.boolean(),
 });
@@ -297,6 +311,10 @@ export const LeaveCommunityResponse = zod.object({
   description: zod.string(),
   memberCount: zod.number(),
   accentColor: zod.string(),
+  icon: zod.string().nullish(),
+  imageUrl: zod.string().nullish(),
+  bannerImageUrl: zod.string().nullish(),
+  profileImageUrl: zod.string().nullish(),
   tags: zod.array(zod.string()),
   isMember: zod.boolean(),
 });

@@ -243,13 +243,19 @@ export default function CommunityDetailPage() {
         className="bg-card border-card-border overflow-hidden"
         data-testid={`card-community-detail-${community.slug}`}
       >
-        <div className="h-2" style={{ backgroundColor: community.accentColor }} />
+        {community.bannerImageUrl ? (
+          <div className="h-40 w-full overflow-hidden">
+            <img src={community.bannerImageUrl} alt="" className="w-full h-full object-cover" />
+          </div>
+        ) : (
+          <div className="h-2" style={{ backgroundColor: community.accentColor }} />
+        )}
         <div className="p-6 flex items-start gap-5 flex-wrap">
-          {community.imageUrl ? (
+          {(community.profileImageUrl || community.imageUrl) ? (
             <img
-              src={community.imageUrl}
+              src={(community.profileImageUrl || community.imageUrl)!}
               alt={community.name}
-              className="w-16 h-16 rounded-xl object-cover flex-shrink-0"
+              className="w-16 h-16 rounded-xl object-cover flex-shrink-0 -mt-10 border-2 border-card shadow-lg"
             />
           ) : (
             <div
