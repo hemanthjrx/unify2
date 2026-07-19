@@ -1,0 +1,248 @@
+Create a `brain.md` file at the root of the project.
+
+This file is NOT user documentation. It is persistent memory for future AI coding agents working on this repository.
+
+The goal is that any new AI agent should be able to understand the project in under 2 minutes without scanning the entire codebase.
+
+Analyze the complete project and continuously update this file.
+
+The file should be structured with the following sections.
+
+# Project Overview
+
+- What this project is.
+- Overall purpose.
+- Primary users.
+- Main features.
+- Current development status.
+
+# Tech Stack
+
+List every important technology used.
+
+Examples:
+
+- Frontend
+- Backend
+- Database
+- ORM
+- Authentication
+- State management
+- Styling
+- Build tools
+- Package manager
+- File structure conventions
+
+# Project Architecture
+
+Explain:
+
+- folder structure
+- routing
+- APIs
+- database flow
+- authentication flow
+- data flow
+- component organization
+
+Do not simply list folders.
+
+Explain why they exist.
+
+# Database
+
+Document every table.
+
+For every table include:
+
+- purpose
+- relationships
+- important fields
+- enums
+- indexes
+- constraints
+
+Mention any special conventions.
+
+# Seeding
+
+Explain:
+
+- how autoSeed() works
+- when it executes
+- what data gets seeded
+- idempotency strategy
+- duplicate prevention
+- important seed helpers
+
+Document every demo dataset.
+
+Examples:
+
+- students
+- communities
+- marketplace
+- mentorship
+- hackathons
+- announcements
+- freelancers
+
+# Features
+
+For every feature explain:
+
+- purpose
+- implementation
+- entry point
+- important files
+- dependencies
+
+Examples:
+
+Communities
+
+Marketplace
+
+Hackathons
+
+Mentorship
+
+Announcements
+
+Authentication
+
+Profiles
+
+Comments
+
+Notifications
+
+Search
+
+etc.
+
+# Important Business Rules
+
+Document every important rule that should never accidentally be broken.
+
+Examples:
+
+- hackathons are stored as posts
+- kind="hackathon"
+- students are hardcoded
+- moderators come from demo users
+- communities use existing users
+- etc.
+
+# Coding Conventions
+
+Document:
+
+- naming conventions
+- component conventions
+- hooks
+- utilities
+- file naming
+- API naming
+- database naming
+- import conventions
+
+# Reusable Components
+
+Document every reusable component.
+
+Explain:
+
+- purpose
+- props
+- where it is used
+
+# Reusable Utilities
+
+Document helper functions.
+
+Explain what they do.
+
+# Environment
+
+Document:
+
+- required environment variables
+- secrets (names only, never values)
+- runtime assumptions
+
+# Current TODO
+
+Automatically maintain a checklist of unfinished work.
+
+Examples:
+
+- completed
+- in progress
+- pending
+
+Update this section whenever work changes.
+
+# Known Bugs
+
+Maintain a list of:
+
+- current bugs
+- temporary fixes
+- workarounds
+- technical debt
+
+# Decisions
+
+Whenever an architectural decision is made, record:
+
+- what changed
+- why it changed
+- date (if available)
+- files affected
+
+This section should act as project memory.
+
+# AI Notes
+
+Maintain important notes specifically for future AI agents.
+
+Examples:
+
+- files that should not be modified
+- fragile code
+- generated code
+- expensive operations
+- performance considerations
+- hidden dependencies
+- common mistakes to avoid
+
+# Quick Navigation
+
+Create a quick lookup table mapping major features to their important files.
+
+Example:
+
+Community
+→ routes
+→ components
+→ services
+→ database
+
+Hackathons
+→ routes
+→ components
+→ seed
+→ schema
+
+etc.
+
+# Update Policy
+
+At the end of every coding task, automatically update this brain.md if anything important changed.
+
+Never let this file become outdated.
+
+Do not include unnecessary explanations.
+
+Keep it concise, accurate, and continuously maintained so that future AI agents can immediately understand the project and continue development without re-discovering the codebase.
