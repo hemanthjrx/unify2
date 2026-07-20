@@ -53,7 +53,7 @@ export const MARKETPLACE_LISTINGS: MarketplaceListing[] = [
     description:
       "Hand-poured in small batches, these eco-friendly soy candles come in unique scent blends to help you relax after a long day of lectures.",
     price: "249.00",
-    category: "handmade",
+    category: "Handmade",
     extraRaterIdxs: [0, 2, 5, 20, 22, 40, 42, 60, 62, 80, 82, 100, 102, 120],
     reviews: [
       { reviewerIdx: 1,  rating: 5, comment: "Absolutely love the lavender blend! Burns evenly and the scent lasts for hours. My room smells amazing now." },
@@ -74,7 +74,7 @@ export const MARKETPLACE_LISTINGS: MarketplaceListing[] = [
     description:
       "Stylish, one-of-a-kind resin trays perfect for keeping your keys, coins, or jewelry organized on your desk.",
     price: "349.00",
-    category: "handmade",
+    category: "Handmade",
     extraRaterIdxs: [3, 6, 10, 21, 26, 61, 63, 81, 83, 101, 103, 121, 123, 140],
     reviews: [
       { reviewerIdx: 0,  rating: 5, comment: "Absolutely beautiful! The marbled effect looks stunning on my study table. Very well-made." },
@@ -94,7 +94,7 @@ export const MARKETPLACE_LISTINGS: MarketplaceListing[] = [
     description:
       "Add a touch of boho aesthetic to your dorm or room with these intricate, handcrafted fiber art wall hangings.",
     price: "599.00",
-    category: "handmade",
+    category: "Handmade",
     extraRaterIdxs: [1, 4, 8, 22, 27, 40, 44, 61, 64, 101, 104, 121, 124, 141, 143],
     reviews: [
       { reviewerIdx: 2,  rating: 5, comment: "This transformed my boring hostel room into something straight out of Pinterest. Stunning work!" },
@@ -115,7 +115,7 @@ export const MARKETPLACE_LISTINGS: MarketplaceListing[] = [
     description:
       "Brighten up your study space with these vibrant, hand-painted pots—the perfect home for your new succulent.",
     price: "199.00",
-    category: "handmade",
+    category: "Handmade",
     extraRaterIdxs: [7, 9, 12, 23, 28, 43, 46, 62, 66, 82, 86, 122, 125, 143, 145],
     reviews: [
       { reviewerIdx: 0,  rating: 5, comment: "Bought two for my succulents and they look adorable! The painting is really detailed and colourful." },
@@ -135,7 +135,7 @@ export const MARKETPLACE_LISTINGS: MarketplaceListing[] = [
     description:
       "Minimalist, handcrafted beaded bracelets designed to bring a little extra positive energy to your daily outfit.",
     price: "149.00",
-    category: "fashion",
+    category: "Fashion",
     extraRaterIdxs: [5, 8, 14, 25, 30, 44, 47, 61, 65, 81, 84, 100, 106, 121, 126, 141],
     reviews: [
       { reviewerIdx: 1,  rating: 5, comment: "So pretty and delicate! The rose quartz bracelet is exactly what I wanted. Fits perfectly." },
@@ -156,7 +156,7 @@ export const MARKETPLACE_LISTINGS: MarketplaceListing[] = [
     description:
       "Get organized with my pack of hand-designed, aesthetic stickers tailored for bullet journaling and daily task tracking.",
     price: "99.00",
-    category: "stationery",
+    category: "Stationery",
     extraRaterIdxs: [0, 4, 10, 23, 27, 41, 46, 60, 64, 81, 85, 102, 107, 123, 127],
     reviews: [
       { reviewerIdx: 2,  rating: 5, comment: "These stickers are so adorable and perfectly sized for my bullet journal. Love them!" },
@@ -176,7 +176,7 @@ export const MARKETPLACE_LISTINGS: MarketplaceListing[] = [
     description:
       "Beautifully crafted bookmarks using high-quality cardstock and pressed flowers—a must-have for every late-night study session.",
     price: "79.00",
-    category: "stationery",
+    category: "Stationery",
     extraRaterIdxs: [1, 6, 11, 20, 28, 40, 47, 61, 65, 80, 86, 101, 108, 120, 127, 141],
     reviews: [
       { reviewerIdx: 2,  rating: 5, comment: "The pressed flower bookmark is the most beautiful thing I own. It looks like art." },
@@ -196,7 +196,7 @@ export const MARKETPLACE_LISTINGS: MarketplaceListing[] = [
     description:
       "I create durable, custom-designed fabric covers for your standard notebooks to keep your notes protected and stylish.",
     price: "179.00",
-    category: "stationery",
+    category: "Stationery",
     extraRaterIdxs: [3, 7, 12, 21, 29, 41, 48, 62, 66, 80, 88, 103, 109, 122, 128, 142],
     reviews: [
       { reviewerIdx: 0,  rating: 5, comment: "My notebooks look so professional now! The fabric quality is great and the stitching is perfect." },
@@ -209,14 +209,14 @@ export const MARKETPLACE_LISTINGS: MarketplaceListing[] = [
     ],
   },
 
-  // 9. Academic Success Templates (Digital) — seller: Shreya Iyer (AIML, idx 5)
+  // 9. Academic Success Templates (Digital) — seller: oghemz / Hemanth J R (IOT, idx 79)
   {
-    sellerIdx: 5,
+    sellerIdx: 79,
     title: "Academic Success Templates (Digital)",
     description:
       "Streamlined, ready-to-use Notion templates designed specifically to help students track assignments and exam schedules.",
     price: "129.00",
-    category: "digital",
+    category: "Digital",
     extraRaterIdxs: [1, 4, 9, 20, 24, 40, 45, 61, 66, 81, 86, 101, 106, 121, 126, 141, 143],
     reviews: [
       { reviewerIdx: 2,  rating: 5, comment: "This Notion template has completely transformed how I manage my semester. Absolutely love it!" },
@@ -237,7 +237,7 @@ export const MARKETPLACE_LISTINGS: MarketplaceListing[] = [
     description:
       "Express your personality with durable, custom-cut vinyl stickers designed specifically for your laptop or water bottle.",
     price: "119.00",
-    category: "accessories",
+    category: "Accessories",
     extraRaterIdxs: [2, 6, 11, 22, 27, 41, 46, 62, 66, 82, 87, 101, 107, 121, 127, 142],
     reviews: [
       { reviewerIdx: 0,  rating: 5, comment: "My laptop looks so cool now! The print quality is sharp and the vinyl is thick and durable." },
@@ -257,7 +257,7 @@ export const MARKETPLACE_LISTINGS: MarketplaceListing[] = [
     description:
       "Cute, soft, and handmade crochet companions that make the perfect desk buddy or small gift for a friend.",
     price: "299.00",
-    category: "handmade",
+    category: "Handmade",
     extraRaterIdxs: [1, 5, 10, 20, 25, 42, 48, 61, 65, 80, 85, 102, 108, 122, 128, 143],
     reviews: [
       { reviewerIdx: 2,  rating: 5, comment: "The tiny bunny plushie is the cutest thing I've ever owned. The detail in the stitching is incredible." },
@@ -278,7 +278,7 @@ export const MARKETPLACE_LISTINGS: MarketplaceListing[] = [
     description:
       "Durable, eco-friendly tote bags perfect for carrying your heavy textbooks and laptop across campus in style.",
     price: "279.00",
-    category: "fashion",
+    category: "Fashion",
     extraRaterIdxs: [0, 4, 9, 21, 26, 41, 46, 63, 67, 81, 86, 100, 106, 123, 129, 143, 145],
     reviews: [
       { reviewerIdx: 2,  rating: 5, comment: "This bag carries all my textbooks without any strain on the handles. Extremely durable." },
@@ -298,7 +298,7 @@ export const MARKETPLACE_LISTINGS: MarketplaceListing[] = [
     description:
       "Soft, hair-friendly accessories handmade in various colors and patterns to match any of your daily looks.",
     price: "89.00",
-    category: "fashion",
+    category: "Fashion",
     extraRaterIdxs: [1, 5, 11, 20, 26, 40, 47, 60, 66, 80, 87, 121, 126, 141, 146, 3],
     reviews: [
       { reviewerIdx: 2,  rating: 5, comment: "Silk scrunchies are a total game changer for my hair. Zero breakage and so gentle!" },
@@ -318,7 +318,7 @@ export const MARKETPLACE_LISTINGS: MarketplaceListing[] = [
     description:
       "I offer custom embroidery services for plain caps, adding your initials or a small, unique design to make it your own.",
     price: "499.00",
-    category: "fashion",
+    category: "Fashion",
     extraRaterIdxs: [2, 6, 11, 21, 27, 40, 45, 60, 65, 81, 88, 102, 108, 120, 127, 141, 146],
     reviews: [
       { reviewerIdx: 0,  rating: 5, comment: "The embroidery on my cap is flawless. Clean stitches and exactly the font I requested." },
@@ -339,7 +339,7 @@ export const MARKETPLACE_LISTINGS: MarketplaceListing[] = [
     description:
       "Keep your lips hydrated with these all-natural, handmade balms crafted from organic beeswax and essential oils.",
     price: "119.00",
-    category: "beauty",
+    category: "Beauty",
     extraRaterIdxs: [1, 5, 10, 20, 24, 41, 46, 61, 66, 81, 86, 100, 107, 121, 127, 141],
     reviews: [
       { reviewerIdx: 2,  rating: 5, comment: "These lip balms are incredible. My lips have never been this soft. The rose one is divine." },
@@ -359,7 +359,7 @@ export const MARKETPLACE_LISTINGS: MarketplaceListing[] = [
     description:
       "Freshly baked, artisan cookie assortments that are perfect for late-night cravings or sharing with your roommates.",
     price: "329.00",
-    category: "food",
+    category: "Food",
     extraRaterIdxs: [0, 3, 7, 21, 26, 40, 45, 60, 65, 80, 86, 101, 107, 121, 127, 141, 143],
     reviews: [
       { reviewerIdx: 2,  rating: 5, comment: "The double chocolate chip cookies are absolutely incredible. Moist, chewy, and perfectly baked." },
@@ -379,7 +379,7 @@ export const MARKETPLACE_LISTINGS: MarketplaceListing[] = [
     description:
       "I curate themed gift boxes filled with handmade items like candles, snacks, and stationery—the ultimate 'care package' for finals week.",
     price: "799.00",
-    category: "gifts",
+    category: "Gifts",
     extraRaterIdxs: [1, 4, 9, 20, 27, 40, 46, 60, 66, 81, 87, 101, 108, 120, 128, 141, 145],
     reviews: [
       { reviewerIdx: 2,  rating: 5, comment: "Got a hamper for my roommate's birthday and she was absolutely overwhelmed. So thoughtful!" },
@@ -400,7 +400,7 @@ export const MARKETPLACE_LISTINGS: MarketplaceListing[] = [
     description:
       "Relax with my signature blends of herbal tea, hand-packed in eco-friendly sachets for a quick, calming break.",
     price: "189.00",
-    category: "food",
+    category: "Food",
     extraRaterIdxs: [0, 4, 8, 20, 25, 41, 47, 61, 65, 80, 87, 101, 108, 121, 127, 142],
     reviews: [
       { reviewerIdx: 2,  rating: 5, comment: "The chamomile lavender blend helps me sleep so well before exams. Absolutely love it!" },
@@ -413,14 +413,14 @@ export const MARKETPLACE_LISTINGS: MarketplaceListing[] = [
     ],
   },
 
-  // 19. Decorative Keychains — seller: Nithya Suresh (CSE, idx 29)
+  // 19. Decorative Keychains — seller: oghemz / Hemanth J R (IOT, idx 79)
   {
-    sellerIdx: 29,
+    sellerIdx: 79,
     title: "Decorative Keychains",
     description:
       "Unique, handmade resin or bead keychains that add a pop of color and personality to your backpack or keys.",
     price: "89.00",
-    category: "accessories",
+    category: "Accessories",
     extraRaterIdxs: [1, 5, 10, 21, 26, 40, 45, 60, 65, 81, 86, 101, 107, 121, 127, 141, 146],
     reviews: [
       { reviewerIdx: 2,  rating: 5, comment: "The resin keychain I ordered has a tiny flower inside it. Looks absolutely magical!" },
@@ -440,7 +440,7 @@ export const MARKETPLACE_LISTINGS: MarketplaceListing[] = [
     description:
       "Small, original statement art pieces that are perfect for decorating cramped dorm walls or gifting to friends on a budget.",
     price: "219.00",
-    category: "art",
+    category: "Art",
     extraRaterIdxs: [0, 4, 8, 21, 26, 41, 46, 61, 66, 81, 87, 101, 108, 121, 128, 142, 146],
     reviews: [
       { reviewerIdx: 2,  rating: 5, comment: "The miniature sunset painting is breathtaking. Such rich colours in such a small canvas." },
@@ -458,9 +458,9 @@ export const MARKETPLACE_LISTINGS: MarketplaceListing[] = [
 // ─── Freelance Listings ───────────────────────────────────────────────────────
 
 export const FREELANCE_LISTINGS: FreelanceListing[] = [
-  // 1. AI Prompt Engineering & Automation — provider: Arjun Sharma (AIML, idx 0)
+  // 1. AI Prompt Engineering & Automation — provider: oghemz / Hemanth J R (IOT, idx 79)
   {
-    providerIdx: 0,
+    providerIdx: 79,
     title: "AI Prompt Engineering & Automation",
     description:
       "Beyond simple usage, businesses now pay for professionals who can build custom AI workflows, chatbots, and optimized prompts to improve operational efficiency.",

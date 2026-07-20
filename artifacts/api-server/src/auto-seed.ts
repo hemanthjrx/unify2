@@ -990,8 +990,209 @@ export async function autoSeed(): Promise<void> {
       }
     }
 
+    // ── 11. Admin categories (marketplace + freelance) ──
+    const MARKETPLACE_CATEGORIES = [
+      "Handmade", "Fashion", "Stationery", "Digital", "Accessories",
+      "Beauty", "Food", "Gifts", "Art", "Electronics", "Books & Notes", "Sports",
+    ];
+    const FREELANCE_CATEGORIES = [
+      "AI & Automation", "Web Development", "Design", "Marketing", "Writing",
+      "Video & Media", "Data & Analytics", "Cybersecurity", "Operations",
+      "Photography", "Music & Audio", "Event Management", "Tutoring & Education",
+    ];
+    for (const name of MARKETPLACE_CATEGORIES) {
+      await client.query(`INSERT INTO categories (type, name) VALUES ('marketplace', $1)`, [name]);
+    }
+    for (const name of FREELANCE_CATEGORIES) {
+      await client.query(`INSERT INTO categories (type, name) VALUES ('freelance', $1)`, [name]);
+    }
+
+    // ── 12. Skills / interests ──
+    const INTERESTS_SEED = [
+      { name: "Programming",        category: "Technology", emoji: "💻" },
+      { name: "Web Development",    category: "Technology", emoji: "🌐" },
+      { name: "Machine Learning",   category: "Technology", emoji: "🤖" },
+      { name: "Cybersecurity",      category: "Technology", emoji: "🔐" },
+      { name: "IoT",                category: "Technology", emoji: "📡" },
+      { name: "Data Science",       category: "Technology", emoji: "📊" },
+      { name: "Mobile Apps",        category: "Technology", emoji: "📱" },
+      { name: "Cloud Computing",    category: "Technology", emoji: "☁️" },
+      { name: "DevOps",             category: "Technology", emoji: "⚙️" },
+      { name: "Open Source",        category: "Technology", emoji: "🧑‍💻" },
+      { name: "UI/UX Design",       category: "Design",     emoji: "🎨" },
+      { name: "Graphic Design",     category: "Design",     emoji: "✏️" },
+      { name: "3D Modeling",        category: "Design",     emoji: "🧊" },
+      { name: "Photography",        category: "Design",     emoji: "📷" },
+      { name: "Video Editing",      category: "Design",     emoji: "🎬" },
+      { name: "Motion Graphics",    category: "Design",     emoji: "🎞️" },
+      { name: "Illustration",       category: "Design",     emoji: "🖌️" },
+      { name: "Brand Design",       category: "Design",     emoji: "🏷️" },
+      { name: "Entrepreneurship",   category: "Business",   emoji: "🚀" },
+      { name: "Digital Marketing",  category: "Business",   emoji: "📣" },
+      { name: "Finance",            category: "Business",   emoji: "💰" },
+      { name: "Product Management", category: "Business",   emoji: "📋" },
+      { name: "Business Analytics", category: "Business",   emoji: "📈" },
+      { name: "Social Media",       category: "Business",   emoji: "📲" },
+      { name: "Consulting",         category: "Business",   emoji: "🤝" },
+      { name: "Research",           category: "Science",    emoji: "🔬" },
+      { name: "Mathematics",        category: "Science",    emoji: "📐" },
+      { name: "Physics",            category: "Science",    emoji: "⚛️" },
+      { name: "Biotechnology",      category: "Science",    emoji: "🧬" },
+      { name: "Environmental Sc.", category: "Science",    emoji: "🌿" },
+      { name: "Music",              category: "Arts",       emoji: "🎵" },
+      { name: "Dance",              category: "Arts",       emoji: "💃" },
+      { name: "Painting",           category: "Arts",       emoji: "🖼️" },
+      { name: "Creative Writing",   category: "Arts",       emoji: "📝" },
+      { name: "Theatre",            category: "Arts",       emoji: "🎭" },
+      { name: "Film",               category: "Arts",       emoji: "🎥" },
+      { name: "Badminton",          category: "Sports",     emoji: "🏸" },
+      { name: "Cricket",            category: "Sports",     emoji: "🏏" },
+      { name: "Football",           category: "Sports",     emoji: "⚽" },
+      { name: "Basketball",         category: "Sports",     emoji: "🏀" },
+      { name: "Chess",              category: "Sports",     emoji: "♟️" },
+      { name: "Swimming",           category: "Sports",     emoji: "🏊" },
+      { name: "Table Tennis",       category: "Sports",     emoji: "🏓" },
+      { name: "Athletics",          category: "Sports",     emoji: "🏃" },
+      { name: "Event Planning",     category: "Social",     emoji: "🗓️" },
+      { name: "Volunteering",       category: "Social",     emoji: "🙌" },
+      { name: "Public Speaking",    category: "Social",     emoji: "🎤" },
+      { name: "Debate",             category: "Social",     emoji: "💬" },
+      { name: "Leadership",         category: "Social",     emoji: "🌟" },
+      { name: "Community Building", category: "Social",     emoji: "🏘️" },
+    ];
+    for (const interest of INTERESTS_SEED) {
+      await client.query(
+        `INSERT INTO interests (name, category, emoji) VALUES ($1,$2,$3) ON CONFLICT (name) DO NOTHING`,
+        [interest.name, interest.category, interest.emoji]
+      );
+    }
+
+    // ── 13. oghemz: mentorship question ──
+    // oghemz is ALL_STUDENTS[79] — IoT, index 79
+    const oghemzId = userIds[79];
+    await client.query(
+      `INSERT INTO mentorship_questions (author_id, title, body, tags, is_solved, created_at)
+       VALUES ($1,$2,$3,$4,false,NOW() - INTERVAL '3 hours')`,
+      [
+        oghemzId,
+        "How do I design an ER diagram for a library management system?",
+        "I'm working on my DBMS assignment and got stuck on the entity-relationship diagram for a library management system. The system needs to track books, members, loans, and reservations. Should Book and Copy of Book be separate entities? And how do I handle the many-to-many relationship between Members and Books through loans? Any guidance on normalization (3NF) would really help.",
+        ["DBMS", "ER Diagram", "Normalization", "SQL"],
+      ]
+    );
+
+    // ── 14. oghemz: hackathon invite — Sapthagiri NPS University ──
+    await client.query(
+      `INSERT INTO posts (
+         author_id, body, kind,
+         hackathon_date, hackathon_location, hackathon_team_size,
+         hackathon_skills, hackathon_filled, hackathon_college_name,
+         hackathon_registration_fee, hackathon_problem_statement,
+         hackathon_registration_link, images, created_at
+       ) VALUES ($1,$2,'hackathon','2025-08-15',$3,4,$4,false,'Sapthagiri NPS University',
+                 'Free',$5,$6,'{}',NOW() - INTERVAL '1 hour')`,
+      [
+        oghemzId,
+        "🚀 Excited to share — Sapthagiri NPS University is hosting InnovateSphere 2025, an inter-college AI & Innovation Hackathon! Great opportunity to build something meaningful, connect with talented students across Bangalore, and win some cool prizes. Our team still has one open slot — DM me if you're interested! #Hackathon #AI #InnovateSphere2025",
+        "Sapthagiri NPS University, Bangalore",
+        ["Artificial Intelligence", "Machine Learning", "Python", "React", "Data Science"],
+        "Build an AI-powered solution to address a real-world campus or community challenge. Judged on innovation, technical depth, and presentation.",
+        "https://sapthagiriuniversity.edu.in/innovatesphere2025",
+      ]
+    );
+
+    // ── 15. DM conversations: oghemz ↔ arjunsh & oghemz ↔ sruthik ──
+    // arjunsh = ALL_STUDENTS[0], sruthik = ALL_STUDENTS[27]
+    const arjunshId = userIds[0];
+    const sruthikId = userIds[27];
+
+    // Accepted follow relationships (bidirectional)
+    for (const [a, b] of [[oghemzId, arjunshId], [arjunshId, oghemzId], [oghemzId, sruthikId], [sruthikId, oghemzId]]) {
+      await client.query(
+        `INSERT INTO follows (follower_id, followee_id, status) VALUES ($1,$2,'accepted') ON CONFLICT DO NOTHING`,
+        [a, b]
+      );
+    }
+
+    // oghemz ↔ arjunsh — DBMS assignment + hackathon planning (yesterday afternoon)
+    // Offsets in minutes from NOW(): 1 day 4h 30m → 1 day 3h 33m
+    const arjunMsgs: [number, number, string, number][] = [
+      [oghemzId,  arjunshId, "Bro, did you submit the DBMS assignment?",                                               1710],
+      [arjunshId, oghemzId,  "Not yet 😭. I just started yesterday.",                                                 1707],
+      [oghemzId,  arjunshId, "Classic. Deadline is tomorrow at 11:59 PM.",                                            1705],
+      [arjunshId, oghemzId,  "I know... I'm hoping the professor extends it.",                                         1703],
+      [oghemzId,  arjunshId, "Don't depend on miracles. Finish it today.",                                             1700],
+      [arjunshId, oghemzId,  "Fair 😂. By the way, are you joining the AI hackathon next month?",                     1698],
+      [oghemzId,  arjunshId, "Definitely. Already looking for teammates.",                                             1696],
+      [arjunshId, oghemzId,  "Need one more member?",                                                                  1694],
+      [oghemzId,  arjunshId, "Yeah, if you're serious. We need someone who can handle frontend or presentations.",     1692],
+      [arjunshId, oghemzId,  "I can do React and a bit of UI.",                                                        1690],
+      [oghemzId,  arjunshId, "Perfect. That actually helps a lot.",                                                    1688],
+      [arjunshId, oghemzId,  "What's the project idea?",                                                               1686],
+      [oghemzId,  arjunshId, "Thinking about an AI-powered campus assistant for students.",                            1684],
+      [arjunshId, oghemzId,  "That's actually a solid idea. We could even add timetable reminders.",                  1682],
+      [oghemzId,  arjunshId, "Exactly, and maybe lost & found plus event recommendations.",                            1679],
+      [arjunshId, oghemzId,  "Nice. Are you free this weekend to discuss it?",                                         1677],
+      [oghemzId,  arjunshId, "Saturday afternoon works.",                                                              1675],
+      [arjunshId, oghemzId,  "Cool. Library or cafeteria?",                                                            1673],
+      [oghemzId,  arjunshId, "Cafeteria first. Better coffee, then library if we actually start coding 😂",            1671],
+      [arjunshId, oghemzId,  "Deal 😂",                                                                               1669],
+      [oghemzId,  arjunshId, "Also, have you started learning Git properly?",                                          1667],
+      [arjunshId, oghemzId,  "Barely. I know commits and push, that's about it.",                                     1665],
+      [oghemzId,  arjunshId, "That's enough to start. I'll show you branches and pull requests.",                     1663],
+      [arjunshId, oghemzId,  "Appreciate it, bro.",                                                                    1661],
+      [oghemzId,  arjunshId, "No worries. Just don't upload node_modules to GitHub 😭",                               1659],
+      [arjunshId, oghemzId,  "Too late... I did that once 💀",                                                        1657],
+      [oghemzId,  arjunshId, "😂 Every developer has committed that crime at least once.",                             1655],
+      [arjunshId, oghemzId,  "Good to know I'm officially part of the club now.",                                      1653],
+    ];
+    for (const [sid, rid, body, minsAgo] of arjunMsgs) {
+      await client.query(
+        `INSERT INTO messages (sender_id, recipient_id, body, kind, read, created_at)
+         VALUES ($1,$2,$3,'text',true,NOW() - ($4 || ' minutes')::interval)`,
+        [sid, rid, body, minsAgo]
+      );
+    }
+
+    // oghemz ↔ sruthik — badminton challenge (today morning)
+    // Offsets in minutes from NOW(): 6h 30m → 5h 41m
+    const sruthikMsgs: [number, number, string, number][] = [
+      [oghemzId,  sruthikId, "Hey, badminton today after classes?",                                            390],
+      [sruthikId, oghemzId,  "I'm in! What time?",                                                             387],
+      [oghemzId,  sruthikId, "Around 5:30 PM near the indoor court.",                                          385],
+      [sruthikId, oghemzId,  "Perfect. Don't go easy on me this time 😤",                                      383],
+      [oghemzId,  sruthikId, "Bro, I never go easy. You just need better footwork 😂",                        381],
+      [sruthikId, oghemzId,  "Excuses. Last time you won because my racket strings were loose.",               379],
+      [oghemzId,  sruthikId, "Sure... blame the racket instead of your backhand.",                             377],
+      [sruthikId, oghemzId,  "Okay, Mr. Smash King. Singles or doubles?",                                      375],
+      [oghemzId,  sruthikId, "Let's start with singles, then we'll join the others for doubles.",              373],
+      [sruthikId, oghemzId,  "Deal. Loser buys a juice?",                                                       371],
+      [oghemzId,  sruthikId, "Done. Mango juice for me already 😎",                                            369],
+      [sruthikId, oghemzId,  "Confidence is dangerous.",                                                        367],
+      [oghemzId,  sruthikId, "Confidence comes from practice 😏",                                              365],
+      [sruthikId, oghemzId,  "I've been practicing too, don't underestimate me.",                              363],
+      [oghemzId,  sruthikId, "Good. I want a proper match, not a five-minute warm-up.",                        361],
+      [sruthikId, oghemzId,  "First to 21?",                                                                    359],
+      [oghemzId,  sruthikId, "Yep. Official rules. No cheating on line calls 😂",                              357],
+      [sruthikId, oghemzId,  "Fine. But if I win, you're posting \"Sruthi is the campus badminton champion\" on the community.", 355],
+      [oghemzId,  sruthikId, "😂 Not happening. If you win, I'll post \"GG, well played.\"",                   353],
+      [sruthikId, oghemzId,  "Accepted. See you at 5:30.",                                                      351],
+      [oghemzId,  sruthikId, "Bring your A-game.",                                                              349],
+      [sruthikId, oghemzId,  "And don't be late like last week.",                                               347],
+      [oghemzId,  sruthikId, "That was one time 😭",                                                            345],
+      [sruthikId, oghemzId,  "See you, bro.",                                                                   343],
+      [oghemzId,  sruthikId, "See you. May the best player win! 🏸",                                           341],
+    ];
+    for (const [sid, rid, body, minsAgo] of sruthikMsgs) {
+      await client.query(
+        `INSERT INTO messages (sender_id, recipient_id, body, kind, read, created_at)
+         VALUES ($1,$2,$3,'text',true,NOW() - ($4 || ' minutes')::interval)`,
+        [sid, rid, body, minsAgo]
+      );
+    }
+
     await client.query("COMMIT");
-    console.log(`[auto-seed] ✅ Done — ${ALL_STUDENTS.length} students, ${SYSTEM_ACCOUNTS.length} system accounts, ${COMMUNITIES.length} communities, ${MENTORSHIP_QA.length} mentorship threads, ${MARKETPLACE_LISTINGS.length} marketplace listings, ${FREELANCE_LISTINGS.length} freelance services`);
+    console.log(`[auto-seed] ✅ Done — ${ALL_STUDENTS.length} students, ${SYSTEM_ACCOUNTS.length} system accounts, ${COMMUNITIES.length} communities, ${MENTORSHIP_QA.length} mentorship threads, ${MARKETPLACE_LISTINGS.length} marketplace listings, ${FREELANCE_LISTINGS.length} freelance services, 25 categories, 50 skills, 2 DM threads`);
   } catch (err) {
     await client.query("ROLLBACK");
     console.error("[auto-seed] ❌ Failed:", err);
