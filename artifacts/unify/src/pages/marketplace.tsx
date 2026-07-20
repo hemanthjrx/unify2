@@ -33,8 +33,6 @@ import {
   Trash2,
   X,
   MessageCircle,
-  ChevronDown,
-  ChevronUp,
   ImageIcon,
   HandshakeIcon,
   CheckCircle2,
@@ -47,14 +45,18 @@ const BASE = import.meta.env.BASE_URL.replace(/\/$/, "");
 
 const CATEGORIES = [
   "All",
-  "Books & Notes",
-  "Electronics",
-  "Clothing",
+  "Handmade",
+  "Fashion",
   "Stationery",
-  "Food & Snacks",
+  "Digital",
+  "Accessories",
+  "Beauty",
+  "Food",
+  "Gifts",
+  "Art",
+  "Electronics",
+  "Books & Notes",
   "Sports",
-  "Art & Crafts",
-  "Other",
 ];
 
 function StarRating({
@@ -306,7 +308,6 @@ function ProductCard({
   onEdit: (p: Product) => void;
   onDelete: (id: number) => void;
 }) {
-  const [expanded, setExpanded] = useState(false);
   const [imgError, setImgError] = useState(false);
   const [interested, setInterested] = useState(false);
   const [interestLoading, setInterestLoading] = useState(false);
@@ -449,52 +450,9 @@ function ProductCard({
           )}
         </div>
 
-        <div className="flex items-center justify-between">
-          <button
-            className="flex items-center gap-1 text-xs text-primary font-medium"
-            onClick={() => setExpanded(!expanded)}
-          >
-            {expanded ? (
-              <>
-                <ChevronUp className="w-3.5 h-3.5" /> Show less
-              </>
-            ) : (
-              <>
-                <ChevronDown className="w-3.5 h-3.5" /> View details & reviews
-              </>
-            )}
-          </button>
-          {!product.isOwner && (
+        {!product.isOwner && (
+          <div className="flex justify-end">
             <ReportButton targetType="marketplace" targetId={product.id} label="this listing" />
-          )}
-        </div>
-
-        {expanded && (
-          <div className="space-y-4 pt-1 border-t border-border/50">
-            <p className="text-sm text-muted-foreground whitespace-pre-wrap">{product.description}</p>
-
-            {product.images.length > 1 && (
-              <div className="flex gap-2 overflow-x-auto pb-1">
-                {product.images.slice(1).map((img, i) => (
-                  <img
-                    key={i}
-                    src={imgUrl(img)}
-                    alt=""
-                    className="h-20 w-28 object-cover rounded shrink-0"
-                    onError={(e) => ((e.target as HTMLImageElement).style.display = "none")}
-                  />
-                ))}
-              </div>
-            )}
-
-            {product.contactInfo && (
-              <div className="text-xs bg-muted/50 rounded-md p-2.5">
-                <span className="font-medium">Contact: </span>
-                {product.contactInfo}
-              </div>
-            )}
-
-            <ReviewSection productId={product.id} />
           </div>
         )}
       </CardContent>

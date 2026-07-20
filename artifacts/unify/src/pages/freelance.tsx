@@ -52,16 +52,20 @@ import { ReportButton } from "@/components/ReportModal";
 const BASE = import.meta.env.BASE_URL.replace(/\/$/, "");
 
 const SERVICE_CATEGORIES = [
-  { name: "All", icon: Sparkles },
-  { name: "Photography", icon: Camera },
-  { name: "Videography", icon: Video },
-  { name: "Video Editing", icon: Film },
-  { name: "Web Development", icon: Globe },
-  { name: "Event Decoration", icon: Palette },
-  { name: "Script Writing", icon: FileText },
-  { name: "Graphic Design", icon: Palette },
-  { name: "Music & Audio", icon: Music },
-  { name: "Other", icon: Sparkles },
+  { name: "All",              icon: Sparkles },
+  { name: "AI & Automation",  icon: Sparkles },
+  { name: "Web Development",  icon: Globe },
+  { name: "Design",           icon: Palette },
+  { name: "Marketing",        icon: FileText },
+  { name: "Writing",          icon: FileText },
+  { name: "Video & Media",    icon: Film },
+  { name: "Data & Analytics", icon: Sparkles },
+  { name: "Cybersecurity",    icon: Globe },
+  { name: "Operations",       icon: Sparkles },
+  { name: "Photography",      icon: Camera },
+  { name: "Music & Audio",    icon: Music },
+  { name: "Tutoring & Education", icon: FileText },
+  { name: "Event Management", icon: Sparkles },
 ];
 
 function StarRating({
